@@ -107,11 +107,9 @@ function render(){
 /* ---------- HOME ---------- */
 function home(){
  const fechadas=db.c.filter(c=>!c.a);
- const rec=fechadas.filter(c=>!c.r).reduce((s,c)=>s+(c.tx||0),0);
  const list=db.c.filter(c=>tab=='a'?c.a:!c.a).sort((x,y)=>tab=='a'?x.t-y.t:(y.f||0)-(x.f||0));
- return `<header><h1>SS BUILDER</h1><button class="ib" onclick="db.g=db.g%3+1;save();render()" aria-label="Colunas">▦</button><button class="ib" onclick="go('prod')" aria-label="Produtos">🍸</button><button class="ib" onclick="menu()" aria-label="Mais">⋮</button></header>
+ return `<header><h1>Comandas</h1><button class="ib" onclick="db.g=db.g%3+1;save();render()" aria-label="Colunas">▦</button><button class="ib" onclick="go('prod')" aria-label="Produtos">🍸</button><button class="ib" onclick="menu()" aria-label="Mais">⋮</button></header>
  <main>
- <div class="rec"><div><small>Garçom a receber</small><br><b>${brl(rec)}</b></div><button onclick="receber()">Receber</button></div>
  <div class="box"><div class="r"><span>Em aberto (${db.c.filter(c=>c.a).length})</span><b>${brl(db.c.filter(c=>c.a).reduce((s,c)=>s+tot(c),0))}</b></div><div class="r"><span>Vendido (encerradas)</span><b>${brl(fechadas.reduce((s,c)=>s+tot(c),0))}</b></div>${stor=='no'?'<div class="r" style="color:var(--or)">⚠ Sem armazenamento: exporte o backup (⋮)</div>':''}</div>
  <div class="tabs"><button class="${tab=='a'?'on':''}" onclick="tab='a';render()">Abertas</button><button class="${tab=='f'?'on':''}" onclick="tab='f';render()">Encerradas</button></div>
  ${list.length?`<div class="grid" style="grid-template-columns:repeat(${db.g},1fr)">${list.map(c=>`<div class="cm ${c.a?'':'f'}" onclick="go('cmd','${c.id}')"><span class="chip">${c.a?'Aberta':'Encerrada'}</span><div class="nm">${esc(c.n)}</div><div><small>${c.i.reduce((s,i)=>s+i.q,0)} itens</small><div class="vl">${brl(tot(c))}</div></div></div>`).join('')}</div>`:`<div class="em">${tab=='a'?'Nenhuma comanda aberta. Toque em + para abrir uma mesa.':'Nenhuma comanda encerrada.'}</div>`}
@@ -120,9 +118,6 @@ function home(){
 function novaC(){sheet(`<h2>Nova comanda</h2><p>Nome da mesa ou do cliente.</p><input id="f1" placeholder="Ex.: Mesa 4" autofocus><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="criaC()">Abrir</button></div>`)}
 function criaC(){const n=$('#f1').value.trim();if(!n){toast('Digite o nome da comanda');return}
  const c={id:uid(),n,a:1,t:Date.now(),pct:db.pct,pe:0,i:[]};db.c.push(c);save();cl();go('cmd',c.id)}
-function receber(){const l=db.c.filter(c=>!c.a&&!c.r&&c.tx>0);if(!l.length){toast('Nada a receber');return}
- sheet(`<h2>Receber</h2><p>Marcar ${brl(l.reduce((s,c)=>s+c.tx,0))} como recebido?</p><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="l2()">Receber</button></div>`)}
-function l2(){db.c.forEach(c=>{if(!c.a)c.r=1});save();cl();render()}
 function menu(){sheet(`<h2>Backup</h2><p>Dados salvos ${stor=='idb'?'neste aparelho (IndexedDB)':stor=='ls'?'neste aparelho (localStorage)':'<b>somente enquanto a página estiver aberta</b>'}. Exporte um backup com frequência.</p><div class="fl"><button class="bt ro" onclick="expo()">Exportar backup</button><button class="bt gh" onclick="$('#fb').click()">Importar</button></div><input id="fb" type="file" accept=".json,application/json" hidden onchange="impo(this)"><div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 function expo(){if(window.Android){Android.salvar('comandas-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(db));return}const b=new Blob([JSON.stringify(db)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='comandas-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove()}
 function impo(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.c||!d.p)throw 0;db=d;save();cl();render();toast('Backup restaurado')}catch(e){toast('Arquivo inválido')}};r.readAsText(f)}
