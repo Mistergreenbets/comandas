@@ -109,6 +109,8 @@ function toast(t){const e=document.createElement('div');e.className='tt';e.textC
 const sheet=h=>$('#m').innerHTML=`<div class="ov" onclick="if(event.target==this)cl()"><div class="sh">${h}</div></div>`;
 const cl=()=>$('#m').innerHTML='';
 function go(v,id){view=v;if(id!==undefined)cur=id;render();scrollTo(0,0)}
+function voltar(){if($('#m').innerHTML){cl();return true}if(view!='home'){go('home');return true}return false}
+if(!window.Android){try{history.pushState({g:1},'');addEventListener('popstate',()=>{if(voltar())history.pushState({g:1},'');else history.back()})}catch(e){}}
 
 function render(){
  const a=$('#app');
