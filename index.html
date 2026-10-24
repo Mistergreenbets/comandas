@@ -109,7 +109,7 @@ function home(){
  const fechadas=db.c.filter(c=>!c.a);
  const rec=fechadas.filter(c=>!c.r).reduce((s,c)=>s+(c.tx||0),0);
  const list=db.c.filter(c=>tab=='a'?c.a:!c.a).sort((x,y)=>tab=='a'?x.t-y.t:(y.f||0)-(x.f||0));
- return `<header><h1>Comandas</h1><button class="ib" onclick="db.g=db.g%3+1;save();render()" aria-label="Colunas">▦</button><button class="ib" onclick="go('prod')" aria-label="Produtos">🍸</button><button class="ib" onclick="menu()" aria-label="Mais">⋮</button></header>
+ return `<header><h1>SS BUILDER</h1><button class="ib" onclick="db.g=db.g%3+1;save();render()" aria-label="Colunas">▦</button><button class="ib" onclick="go('prod')" aria-label="Produtos">🍸</button><button class="ib" onclick="menu()" aria-label="Mais">⋮</button></header>
  <main>
  <div class="rec"><div><small>Garçom a receber</small><br><b>${brl(rec)}</b></div><button onclick="receber()">Receber</button></div>
  <div class="box"><div class="r"><span>Em aberto (${db.c.filter(c=>c.a).length})</span><b>${brl(db.c.filter(c=>c.a).reduce((s,c)=>s+tot(c),0))}</b></div><div class="r"><span>Vendido (encerradas)</span><b>${brl(fechadas.reduce((s,c)=>s+tot(c),0))}</b></div>${stor=='no'?'<div class="r" style="color:var(--or)">⚠ Sem armazenamento: exporte o backup (⋮)</div>':''}</div>
