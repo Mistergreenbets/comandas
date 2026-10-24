@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Comandas</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#2d0f8f"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--lt:#9be03c;--bg:#9be03c;--ro:#2d0f8f;--ro2:#4a22c4;--cd:#fff;--tx:#2d0f8f;--mu:#5b5873;--ln:#e4e0f0;--or:#23222b;--ok:#9be03c;--gr:#23222b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.35 system-ui,sans-serif}
+h1,h2,.bree,.nm,.vl,.big b,.rec b,.bt,.tabs button,.chip{font-family:'Poppins',system-ui,sans-serif;font-weight:600}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--ro);z-index:20}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--ro);color:#fff;display:flex;align-items:center;gap:4px;padding:10px 12px;min-height:60px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px #2d0f8f55}
+header h1{flex:1;margin:0;font-size:21px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{background:#ffffff1f;border:0;color:#fff;font-size:20px;width:42px;height:42px;border-radius:14px}
+.ib:active{background:#fff4}
+main{padding:14px 12px 100px;max-width:720px;margin:0 auto}
+.box{background:var(--cd);border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px #2d0f8f26}
+.r{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0}
+.big{font-size:24px}
+input,textarea{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);padding:10px 12px;min-width:0;width:100%;border-radius:14px}
+input:focus,textarea:focus{outline:0;border-color:var(--ro)}
+textarea{margin-top:12px;resize:vertical}
+.sm{width:88px;text-align:right}
+button{font:inherit;cursor:pointer}
+.bt{background:var(--ro);color:#fff;border:0;border-radius:14px;padding:12px 16px}
+.bt.ro{background:var(--ro)}
+.bt.gh{background:#fff;color:var(--ro);border:2px solid var(--ro)}
+.q{background:var(--ro);color:#fff;border:0;border-radius:12px;width:40px;height:40px;font-size:20px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;padding:11px;border-radius:999px;border:0;background:#ffffffcc;color:var(--ro)}
+.tabs .on{background:var(--ro);color:#fff}
+.grid{display:grid;gap:12px}
+.cm{background:var(--cd);border-radius:20px;padding:14px;min-height:124px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;box-shadow:0 4px 14px #2d0f8f26;cursor:pointer}
+.cm.f{opacity:.8}
+.chip{align-self:flex-start;font-size:12px;background:var(--lt);color:var(--gr);border-radius:999px;padding:3px 10px}
+.cm.f .chip{background:var(--ln);color:var(--mu)}
+.cm .nm{font-size:19px;overflow-wrap:anywhere;color:var(--ro)}
+.cm .vl{font-size:19px;color:var(--ro)}
+.cm small{color:var(--mu)}
+.rec{background:var(--ro);color:#fff;border-radius:20px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;box-shadow:0 6px 16px #2d0f8f55}
+.rec b{font-size:26px;color:var(--lt)}
+.rec button{background:var(--lt);color:var(--gr);border:0;border-radius:999px;padding:9px 18px;font-weight:600}
+.it{background:var(--cd);border-radius:20px;padding:10px;margin-bottom:10px;display:flex;gap:12px;box-shadow:0 4px 14px #2d0f8f26}
+.th{width:68px;height:68px;border-radius:14px;object-fit:cover;background:var(--ln);flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--ro)}
+.it .c{flex:1;min-width:0}
+.it .t{display:flex;justify-content:space-between;gap:8px}
+.it .nm{font-size:17px;overflow-wrap:anywhere}
+.it small{color:var(--gr)}
+.it .a{display:flex;align-items:center;gap:8px;margin-top:6px}
+.it .a span{min-width:24px;text-align:center;font-weight:700}
+.sp{flex:1}
+.fab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:20px;background:var(--ro);color:#fff;border:0;font-size:32px;box-shadow:0 8px 20px #2d0f8f77;z-index:5}
+.ov{position:fixed;inset:0;background:#1a0a4f99;z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sh{background:#fff;width:100%;max-width:720px;max-height:90%;overflow:auto;border-radius:26px 26px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sh h2{margin:0 0 6px;font-size:22px}
+.sh p{color:var(--mu);margin:4px 0 10px}
+.fl{display:flex;gap:10px;margin-top:16px}.fl .bt{flex:1}
+.tl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.tp{position:relative;background:#fff;border-radius:16px;overflow:hidden;text-align:center;border:2px solid var(--ln);color:var(--ro);padding:0 0 8px}
+.tp img,.tp i{width:100%;aspect-ratio:1;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:30px;font-style:normal;background:var(--ln);color:var(--ro)}
+.tp b{display:block;font-weight:600;font-size:13px;padding:6px 4px 0;line-height:1.15}
+.tp small{color:var(--gr);font-weight:600}
+.tp em{position:absolute;top:6px;right:6px;background:var(--ro);color:#fff;border-radius:999px;font-style:normal;min-width:26px;height:26px;line-height:26px;font-weight:700;font-size:13px}
+.em{text-align:center;color:var(--ro);padding:40px 20px;font-weight:500}
+.sh .em{color:var(--mu)}
+.ph{width:112px;height:112px;margin:12px auto 0;border-radius:20px;object-fit:cover;background:var(--ln);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--ro)}
+.tt{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gr);color:#fff;padding:10px 16px;border-radius:14px;z-index:40}
+</style></head><body>
+<div id="app"></div><div id="m"></div>
+<script>
+const $=s=>document.querySelector(s);
+let db={c:[],p:[],g:2,pct:10},stor='no';
+const idb=()=>new Promise((ok,no)=>{try{const r=indexedDB.open('comandas',1);r.onupgradeneeded=()=>r.result.createObjectStore('k');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)}catch(e){no(e)}});
+async function load(){
+ try{const d=await idb();const v=await new Promise((ok,no)=>{const q=d.transaction('k').objectStore('k').get('db');q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)});if(v)db=v;stor='idb'}
+ catch(e){try{const v=JSON.parse(localStorage.getItem('cmd1')||'null');if(v)db=v;localStorage.setItem('cmd1x','1');stor='ls'}catch(e2){stor='no'}}
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+ render()}
+let view='home',cur=null,tab='a',ft=0;
+const save=async()=>{try{
+ if(stor=='idb'){const d=await idb();d.transaction('k','readwrite').objectStore('k').put(db,'db')}
+ else if(stor=='ls')localStorage.setItem('cmd1',JSON.stringify(db));
+ else toast('Sem armazenamento neste navegador: exporte o backup')}catch(e){stor='no';toast('Não foi possível salvar: exporte o backup');if(view=='home')render()}};
+const brl=n=>'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=s=>{s=String(s).replace(/[^\d.,]/g,'');if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');return parseFloat(s)||0};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sub=c=>c.i.reduce((s,i)=>s+i.v*i.q,0);
+const taxa=c=>c.fx!=null?c.fx:sub(c)*c.pct/100;
+const tot=c=>sub(c)+taxa(c);
+const getC=()=>db.c.find(c=>c.id==cur);
+const prod=id=>db.p.find(p=>p.id==id);
+const thumb=(img,nm)=>img?`<img class="th" src="${img}" alt="">`:`<div class="th bree">${esc((nm||'?')[0].toUpperCase())}</div>`;
+function toast(t){const e=document.createElement('div');e.className='tt';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),1800)}
+const sheet=h=>$('#m').innerHTML=`<div class="ov" onclick="if(event.target==this)cl()"><div class="sh">${h}</div></div>`;
+const cl=()=>$('#m').innerHTML='';
+function go(v,id){view=v;if(id!==undefined)cur=id;render();scrollTo(0,0)}
+
+function render(){
+ const a=$('#app');
+ if(view=='home')a.innerHTML=home();
+ else if(view=='cmd')a.innerHTML=cmdView();
+ else a.innerHTML=prodView();
+ if(view=='cmd')upd();
+}
+/* ---------- HOME ---------- */
+function home(){
+ const fechadas=db.c.filter(c=>!c.a);
+ const rec=fechadas.filter(c=>!c.r).reduce((s,c)=>s+(c.tx||0),0);
+ const list=db.c.filter(c=>tab=='a'?c.a:!c.a).sort((x,y)=>tab=='a'?x.t-y.t:(y.f||0)-(x.f||0));
+ return `<header><h1>Comandas</h1><button class="ib" onclick="db.g=db.g%3+1;save();render()" aria-label="Colunas">▦</button><button class="ib" onclick="go('prod')" aria-label="Produtos">🍸</button><button class="ib" onclick="menu()" aria-label="Mais">⋮</button></header>
+ <main>
+ <div class="rec"><div><small>Garçom a receber</small><br><b>${brl(rec)}</b></div><button onclick="receber()">Receber</button></div>
+ <div class="box"><div class="r"><span>Em aberto (${db.c.filter(c=>c.a).length})</span><b>${brl(db.c.filter(c=>c.a).reduce((s,c)=>s+tot(c),0))}</b></div><div class="r"><span>Vendido (encerradas)</span><b>${brl(fechadas.reduce((s,c)=>s+tot(c),0))}</b></div>${stor=='no'?'<div class="r" style="color:var(--or)">⚠ Sem armazenamento: exporte o backup (⋮)</div>':''}</div>
+ <div class="tabs"><button class="${tab=='a'?'on':''}" onclick="tab='a';render()">Abertas</button><button class="${tab=='f'?'on':''}" onclick="tab='f';render()">Encerradas</button></div>
+ ${list.length?`<div class="grid" style="grid-template-columns:repeat(${db.g},1fr)">${list.map(c=>`<div class="cm ${c.a?'':'f'}" onclick="go('cmd','${c.id}')"><span class="chip">${c.a?'Aberta':'Encerrada'}</span><div class="nm">${esc(c.n)}</div><div><small>${c.i.reduce((s,i)=>s+i.q,0)} itens</small><div class="vl">${brl(tot(c))}</div></div></div>`).join('')}</div>`:`<div class="em">${tab=='a'?'Nenhuma comanda aberta. Toque em + para abrir uma mesa.':'Nenhuma comanda encerrada.'}</div>`}
+ </main><button class="fab" onclick="novaC()" aria-label="Nova comanda">+</button>`;
+}
+function novaC(){sheet(`<h2>Nova comanda</h2><p>Nome da mesa ou do cliente.</p><input id="f1" placeholder="Ex.: Mesa 4" autofocus><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="criaC()">Abrir</button></div>`)}
+function criaC(){const n=$('#f1').value.trim();if(!n){toast('Digite o nome da comanda');return}
+ const c={id:uid(),n,a:1,t:Date.now(),pct:db.pct,pe:0,i:[]};db.c.push(c);save();cl();go('cmd',c.id)}
+function receber(){const l=db.c.filter(c=>!c.a&&!c.r&&c.tx>0);if(!l.length){toast('Nada a receber');return}
+ sheet(`<h2>Receber</h2><p>Marcar ${brl(l.reduce((s,c)=>s+c.tx,0))} como recebido?</p><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="l2()">Receber</button></div>`)}
+function l2(){db.c.forEach(c=>{if(!c.a)c.r=1});save();cl();render()}
+function menu(){sheet(`<h2>Backup</h2><p>Dados salvos ${stor=='idb'?'neste aparelho (IndexedDB)':stor=='ls'?'neste aparelho (localStorage)':'<b>somente enquanto a página estiver aberta</b>'}. Exporte um backup com frequência.</p><div class="fl"><button class="bt ro" onclick="expo()">Exportar backup</button><button class="bt gh" onclick="$('#fb').click()">Importar</button></div><input id="fb" type="file" accept=".json,application/json" hidden onchange="impo(this)"><div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
+function expo(){if(window.Android){Android.salvar('comandas-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(db));return}const b=new Blob([JSON.stringify(db)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='comandas-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove()}
+function impo(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.c||!d.p)throw 0;db=d;save();cl();render();toast('Backup restaurado')}catch(e){toast('Arquivo inválido')}};r.readAsText(f)}
+/* ---------- COMANDA ---------- */
+function cmdView(){
+ const c=getC();if(!c){view='home';return home()}
+ const ab=c.a;
+ return `<header><button class="ib" onclick="go('home')" aria-label="Voltar">←</button><h1>${esc(c.n)}</h1>${ab?`<button class="ib" onclick="addSheet()" aria-label="Cardápio">🍸</button><button class="ib" onclick="ren()" aria-label="Opções">✎</button><button class="ib" onclick="fechar()" aria-label="Encerrar">$</button>`:`<button class="ib" onclick="del()" aria-label="Excluir">🗑</button>`}</header>
+ <main><div class="box">
+ <div class="r big"><span class="bree">Total</span><b id="t"></b></div>
+ <div class="r"><span>Dividir por</span><input class="sm" id="pe" inputmode="numeric" value="${c.pe||''}" placeholder="pessoas" oninput="chg()"><b id="pp"></b></div>
+ </div>
+ ${c.i.length?c.i.map(i=>{const p=i.pid&&prod(i.pid);return `<div class="it">${thumb(p&&p.img,i.d)}<div class="c"><div class="t"><span class="nm">${esc(i.d)}</span><b class="vl">${brl(i.v*i.q)}</b></div><small>${brl(i.v)} cada</small>${ab?`<div class="a"><button class="q" onclick="qt('${i.id}',-1)">−</button><span>${i.q}</span><button class="q" onclick="qt('${i.id}',1)">+</button><div class="sp"></div><button class="q" onclick="edI('${i.id}')">✎</button><button class="q" style="background:var(--or)" onclick="rmI('${i.id}')">🗑</button></div>`:`<div class="a"><span>${i.q}x</span></div>`}</div></div>`}).join(''):`<div class="em">Comanda vazia. Toque em + para adicionar itens.</div>`}
+ ${ab?'':`<button class="bt ro" style="width:100%" onclick="reabrir()">Reabrir comanda</button>`}
+ </main>${ab?`<button class="fab" onclick="addSheet()" aria-label="Adicionar item">+</button>`:''}`;
+}
+function upd(){const c=getC();if(!c)return;
+ $('#t').textContent=brl(tot(c));
+ $('#pp').textContent=c.pe>0?brl(tot(c)/c.pe):'R$ 0,00'}
+function chg(){const c=getC();
+ const pc=$('#pc'),fx=$('#fx'),pe=$('#pe');
+ if(pc)c.pct=num(pc.value);
+ if(fx){c.fx=fx.value.trim()===''?null:num(fx.value)}
+ if(pe)c.pe=Math.max(0,parseInt(pe.value)||0);
+ db.pct=c.pct;save();upd();const tx=$('#tx');if(tx)tx.textContent=brl(taxa(c))}
+function qt(id,d){const c=getC(),i=c.i.find(x=>x.id==id);i.q+=d;if(i.q<1){rmI(id);return}save();render()}
+function rmI(id){const c=getC();c.i=c.i.filter(x=>x.id!=id);save();render()}
+function edI(id){const i=getC().i.find(x=>x.id==id);
+ sheet(`<h2>Editar item</h2><input id="f1" value="${esc(i.d)}" placeholder="Descrição"><div class="fl"><input id="f2" inputmode="decimal" value="${String(i.v).replace('.',',')}" placeholder="Valor unitário"><input id="f3" inputmode="numeric" value="${i.q}" placeholder="Qtd"></div><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="svI('${id}')">Salvar</button></div>`)}
+function svI(id){const i=getC().i.find(x=>x.id==id);const d=$('#f1').value.trim(),v=num($('#f2').value),q=parseInt($('#f3').value)||0;
+ if(!d||v<=0||q<1){toast('Preencha descrição, valor e quantidade');return}
+ i.d=d;i.v=v;i.q=q;save();cl();render()}
+let unl=0,pcb=null;
+const hs=s=>{let h=5381;for(const c of String(s))h=((h<<5)+h+c.charCodeAt(0))|0;return String(h)};
+function ren(){if(db.pin&&unl<Date.now()){pcb=opc;sheet(`<h2>Senha do garçom</h2><p>Digite a senha para abrir as opções.</p><input id="pn" type="password" inputmode="numeric" placeholder="Senha" autofocus><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="pinOk()">Entrar</button></div>`);return}opc()}
+function pinOk(){if(hs($('#pn').value.trim())==db.pin){unl=Date.now()+120000;cl();pcb()}else toast('Senha incorreta')}
+function opc(){const c=getC();sheet(`<h2>Opções da comanda</h2><p>${db.pin?'Esta tela é só do garçom.':'Defina uma senha abaixo para proteger esta tela.'}</p><input id="f1" value="${esc(c.n)}" placeholder="Nome da comanda"><div class="r" style="margin-top:12px"><span>Garçom (%)</span><input class="sm" id="pc" inputmode="decimal" value="${c.fx!=null?'':String(c.pct).replace('.',',')}" placeholder="%" oninput="chg()"></div><div class="r"><span>Valor fixo do garçom (R$)</span><input class="sm" id="fx" inputmode="decimal" value="${c.fx!=null?String(c.fx).replace('.',','):''}" placeholder="R$" oninput="chg()"></div><div class="r"><span>Garçom nesta comanda</span><b id="tx">${brl(taxa(c))}</b></div><input id="pn" type="password" inputmode="numeric" placeholder="${db.pin?'Nova senha (vazio mantém a atual)':'Criar senha do garçom'}" style="margin-top:8px">${db.pin?`<button class="bt gh" style="width:100%;margin-top:8px" onclick="db.pin=null;save();toast('Senha removida');opc()">Remover senha</button>`:''}<div class="fl"><button class="bt gh" onclick="del()">Excluir</button><button class="bt ro" onclick="rn2()">Salvar</button></div>`)}
+function rn2(){const n=$('#f1').value.trim();if(!n){toast('Digite um nome');return}getC().n=n;const pn=$('#pn');if(pn&&pn.value.trim()){db.pin=hs(pn.value.trim());unl=Date.now()+120000}save();cl();render()}
+function del(){sheet(`<h2>Excluir comanda</h2><p>Esta ação apaga a comanda e todos os itens.</p><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="del2()">Excluir</button></div>`)}
+function del2(){db.c=db.c.filter(c=>c.id!=cur);save();cl();go('home')}
+function fechar(){const c=getC();
+ sheet(`<h2>Encerrar comanda</h2><p>Depois de encerrada, só é possível ver ou reabrir a comanda.</p><div class="r big"><span class="bree">Total</span><b>${brl(tot(c))}</b></div>${c.pe>0?`<div class="r"><span>Por pessoa (${c.pe})</span><b>${brl(tot(c)/c.pe)}</b></div>`:''}<div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="fec2()">Encerrar</button></div>`)}
+function fec2(){const c=getC();c.tx=taxa(c);c.a=0;c.f=Date.now();c.r=0;save();cl();render()}
+function reabrir(){const c=getC();c.a=1;c.r=0;save();render()}
+/* ---------- ADICIONAR ITEM ---------- */
+function addSheet(){
+ sheet(`<h2>Adicionar item</h2><input id="q" placeholder="Buscar no cardápio" oninput="tl()"><div class="tl" id="tl"></div>
+ <p style="margin-top:16px">Item avulso: informe a descrição e o valor.</p>
+ <div class="fl" style="margin-top:0"><input id="f1" placeholder="Descrição"><input id="f2" inputmode="decimal" placeholder="Valor"></div>
+ <div class="fl"><button class="bt gh" onclick="cl()">Fechar</button><button class="bt ro" onclick="avulso()">Adicionar avulso</button></div>`);tl()}
+function tl(){const q=($('#q')||{value:''}).value.toLowerCase(),c=getC();
+ const l=db.p.filter(p=>p.n.toLowerCase().includes(q));
+ $('#tl').innerHTML=l.length?l.map(p=>{const it=c.i.find(i=>i.pid==p.id);return `<button class="tp" onclick="addP('${p.id}')">${p.img?`<img src="${p.img}" alt="">`:`<i>${esc(p.n[0].toUpperCase())}</i>`}${it?`<em>${it.q}</em>`:''}<b>${esc(p.n)}</b><small>${brl(p.v)}</small></button>`}).join(''):`<div class="em" style="grid-column:1/-1;padding:16px">${db.p.length?'Nenhum produto encontrado.':'Cardápio vazio. Cadastre produtos na tela 🍸 da lista de comandas.'}</div>`}
+function addP(id){const c=getC(),p=prod(id);let i=c.i.find(x=>x.pid==id&&x.v==p.v);
+ if(i)i.q++;else c.i.push({id:uid(),pid:id,d:p.n,v:p.v,q:1});
+ save();tl();render()}
+function avulso(){const d=$('#f1').value.trim(),v=num($('#f2').value);
+ if(!d||v<=0){toast('Preencha descrição e valor');return}
+ getC().i.push({id:uid(),d,v,q:1});save();cl();render()}
+/* ---------- PRODUTOS ---------- */
+const dl=(n,t)=>{if(window.Android){Android.salvar(n,'\uFEFF'+t);return}const b=new Blob(['\uFEFF'+t],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove()};
+const q2=x=>'"'+String(x).replace(/"/g,'""')+'"';
+function modelo(){dl('modelo-produtos.csv','imagem;valor;nome\nhttps://exemplo.com/cerveja.jpg;12,50;Cerveja long neck\nhttps://exemplo.com/gelo.jpg;5,00;Gelo\n')}
+function expP(){dl('produtos.csv','imagem;valor;nome\n'+db.p.map(p=>[q2(p.img||''),q2(String(p.v).replace('.',',')),q2(p.n)].join(';')).join('\n'))}
+function csv(t){const l=t.split(/\r?\n/)[0]||'';const d=['\t',';',','].map(x=>[x,l.split(x).length]).sort((a,b)=>b[1]-a[1])[0][0];
+ const R=[];let r=[],c='',q=0;for(let i=0;i<t.length;i++){const ch=t[i];
+  if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=0}else c+=ch}
+  else if(ch=='"')q=1;else if(ch==d){r.push(c);c=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;r.push(c);R.push(r);r=[];c=''}else c+=ch}
+ if(c!==''||r.length){r.push(c);R.push(r)}return R}
+function rowsImport(R){let n=0,u=0;R.forEach(r=>{let im=null,v=null,nm=null;
+ r.forEach(x=>{x=String(x==null?'':x).trim();if(!x)return;
+  if(/^(https?:\/\/|data:image)/i.test(x))im=x;
+  else if(v==null&&/^(R\$)?[\d.,]+$/i.test(x.replace(/\s/g,'')))v=num(x);
+  else if(nm==null)nm=x});
+ if(!nm||!(v>0))return;
+ const p=db.p.find(p=>p.n.toLowerCase()==nm.toLowerCase());
+ if(p){p.v=v;if(im)p.img=im;u++}else{db.p.push({id:uid(),n:nm,v,img:im});n++}});
+ if(!n&&!u){toast('Nenhum produto encontrado: use colunas imagem, valor e nome');return}
+ save();cl();render();toast(n+' novos, '+u+' atualizados')}
+const lib=()=>window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+function readSheet(el){const f=el.files[0];if(!f)return;const r=new FileReader();
+ if(/\.xlsx?$/i.test(f.name)){r.onload=async()=>{try{await lib();const w=XLSX.read(r.result,{type:'array'});rowsImport(XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]],{header:1,raw:true,defval:''}))}catch(e){toast('Não foi possível ler o Excel. Salve como CSV e tente de novo')}};r.readAsArrayBuffer(f)}
+ else{r.onload=()=>rowsImport(csv(String(r.result).replace(/^\uFEFF/,'')));r.readAsText(f)}}
+function pasteImp(){rowsImport(csv($('#ta').value))}
+function impSheet(){sheet(`<h2>Importar produtos</h2><p>Use uma planilha com imagem (link da foto), valor e nome do produto, em qualquer ordem. Aceita CSV, Excel ou células coladas. Produto com o mesmo nome é atualizado.</p><div class="fl" style="margin-top:0"><button class="bt" onclick="$('#fs').click()">Escolher arquivo</button><button class="bt gh" onclick="modelo()">Baixar modelo</button></div><input id="fs" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden onchange="readSheet(this)"><textarea id="ta" rows="5" placeholder="Ou cole aqui as linhas copiadas da planilha"></textarea><div class="fl"><button class="bt gh" onclick="cl()">Fechar</button><button class="bt" onclick="pasteImp()">Importar colado</button></div>`)}
+function prodView(){
+ return `<header><button class="ib" onclick="go('home')" aria-label="Voltar">←</button><h1>Cardápio</h1></header><main>
+ <div class="box"><div class="r"><b>Planilha de produtos</b><small>${db.p.length} cadastrados</small></div><div class="fl" style="margin-top:8px"><button class="bt" onclick="impSheet()">Importar</button><button class="bt gh" onclick="expP()">Exportar CSV</button></div></div>
+ ${db.p.length?db.p.map(p=>`<div class="it">${thumb(p.img,p.n)}<div class="c"><div class="t"><span class="nm">${esc(p.n)}</span><b class="vl">${brl(p.v)}</b></div><div class="a"><div class="sp"></div><button class="q" onclick="pForm('${p.id}')">✎</button><button class="q" style="background:var(--or)" onclick="pDel('${p.id}')">🗑</button></div></div></div>`).join(''):`<div class="em">Nenhum produto. Toque em + para cadastrar com foto e preço.</div>`}
+ </main><button class="fab" onclick="pForm()" aria-label="Novo produto">+</button>`;
+}
+let pimg=null;
+function pForm(id){const p=id?prod(id):null;pimg=p?p.img||null:null;
+ sheet(`<h2>${p?'Editar produto':'Novo produto'}</h2><div id="pv" class="ph" onclick="$('#fi').click()">${pimg?`<img class="ph" style="margin:0" src="${pimg}">`:'📷'}</div><input id="fi" type="file" accept="image/*" hidden onchange="pPick(this)">
+ <p style="text-align:center">Toque na imagem para escolher a foto.</p><input id="f1" value="${p?esc(p.n):''}" placeholder="Nome do produto"><input id="f2" inputmode="decimal" value="${p?String(p.v).replace('.',','):''}" placeholder="Preço" style="margin-top:8px">
+ <div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="pSave('${id||''}')">Salvar</button></div>`)}
+function pPick(el){const f=el.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,320/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=im.width*s;cv.height=im.height*s;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);pimg=cv.toDataURL('image/jpeg',.7);$('#pv').innerHTML=`<img class="ph" style="margin:0" src="${pimg}">`};im.src=r.result};r.readAsDataURL(f)}
+function pSave(id){const n=$('#f1').value.trim(),v=num($('#f2').value);if(!n||v<=0){toast('Preencha nome e preço');return}
+ if(id){const p=prod(id);p.n=n;p.v=v;p.img=pimg}else db.p.push({id:uid(),n,v,img:pimg});
+ save();cl();render()}
+function pDel(id){sheet(`<h2>Excluir produto</h2><p>As comandas que já usam este produto não mudam.</p><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="db.p=db.p.filter(p=>p.id!='${id}');save();cl();render()">Excluir</button></div>`)}
+load();
+</script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script></body></html>
