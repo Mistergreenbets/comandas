@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Painel de licenças</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+:root{--lt:#9be03c;--ro:#2d0f8f;--mu:#5b5873;--ln:#e4e0f0;--gr:#23222b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--lt);color:var(--ro);font:16px/1.35 system-ui,sans-serif}
+h1,h2,h3,b,.bt{font-family:'Poppins',system-ui,sans-serif}
+header{position:sticky;top:0;z-index:10;background:var(--ro);color:#fff;display:flex;align-items:center;gap:8px;padding:14px 16px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px #2d0f8f55}
+header h1{flex:1;margin:0;font-size:20px}
+main{max-width:760px;margin:0 auto;padding:14px 12px 60px}
+.box{background:#fff;border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px #2d0f8f26}
+input{font:inherit;width:100%;color:var(--gr);background:#fff;border:2px solid var(--ln);border-radius:14px;padding:10px 12px;margin-top:8px}
+input:focus{outline:0;border-color:var(--ro)}
+button{font:inherit;cursor:pointer}
+.bt{background:var(--ro);color:#fff;border:0;border-radius:14px;padding:10px 14px;font-weight:600}
+.bt.gh{background:#fff;color:var(--ro);border:2px solid var(--ro)}
+.bt.rd{background:#c2272d}
+.bt.sm{padding:7px 10px;font-size:14px;border-radius:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.row>*{flex:1}
+.chip{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}
+.on{background:var(--lt);color:var(--gr)}.off{background:#c2272d;color:#fff}.sus{background:#ffb300;color:var(--gr)}
+.cl{background:#fff;border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 4px 14px #2d0f8f26}
+.cl h3{margin:0 0 2px;font-size:18px}
+.cl small{display:block;color:var(--mu);word-break:break-all}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.stats{display:flex;gap:8px;margin-bottom:12px}
+.stats div{flex:1;background:#fff;border-radius:16px;padding:10px;text-align:center;box-shadow:0 4px 14px #2d0f8f26}
+.stats b{display:block;font-size:22px}
+#lg{position:fixed;inset:0;background:var(--lt);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+#lg[hidden],#ad[hidden]{display:none}
+.lgc{background:#fff;border-radius:26px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 8px 28px #2d0f8f44}
+.lgc h2{margin:0 0 4px}
+#lm{color:#c2272d;font-weight:600;min-height:20px;margin:10px 0 0;font-size:14px}
+.ov{position:fixed;inset:0;background:#1a0a4f99;z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sh{background:#fff;width:100%;max-width:760px;border-radius:26px 26px 0 0;padding:18px 16px 24px}
+.sh pre{white-space:pre-wrap;background:#f0fada;border-radius:14px;padding:12px;font:14px/1.4 ui-monospace,monospace;color:var(--gr)}
+.tt{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--gr);color:#fff;padding:10px 16px;border-radius:14px;z-index:40}
+</style></head><body>
+
+<div id="lg" hidden><div class="lgc"><h2>Painel de licenças</h2><small>Acesso do administrador</small>
+<input id="au" type="email" placeholder="E-mail do administrador" autocomplete="username"><input id="ap" type="password" placeholder="Senha" autocomplete="current-password" onkeydown="if(event.key=='Enter')entrar()">
+<div class="row"><button class="bt" id="ab" onclick="entrar()">Entrar</button></div><p id="lm"></p></div></div>
+
+<div id="ad" hidden>
+<header><h1>Licenças</h1><button class="bt gh sm" onclick="sair()">Sair</button></header>
+<main>
+ <div class="stats"><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
+ <div class="box"><h3 style="margin:0">Novo cliente</h3>
+  <input id="nn" placeholder="Nome do cliente / estabelecimento"><input id="nu" placeholder="Usuário ou e-mail (ex.: bardaana)" autocapitalize="none">
+  <input id="ns" placeholder="Senha (mín. 6 caracteres)"><div class="row"><button class="bt gh" onclick="gerar()">Gerar senha</button><button class="bt" onclick="criar()">Criar licença</button></div></div>
+ <input id="q" placeholder="Buscar cliente" oninput="draw()" style="margin:0 0 12px">
+ <div id="ls"></div>
+</main></div>
+<div id="m"></div>
+
+<script>
+/* ===== CONFIGURAÇÃO (a mesma do index.html) ===== */
+const FB={apiKey:'AIzaSyBK0fR-piIjs-2TUA-F_jASRiwDvW6G1dY',authDomain:'comandas-licencas.firebaseapp.com',projectId:'comandas-licencas',appId:'1:262986890005:web:098f0613b8c10d1cf6071c'};
+const DOMINIO='comandas.app';                              // igual ao LIC.dominio do index.html
+const APP_URL='https://mistergreenbets.github.io/comandas/';   // endereço do app para enviar ao cliente
+/* ================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let db,auth,list=[],unsub=null;
+const toast=t=>{const e=document.createElement('div');e.className='tt';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)};
+const fdt=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'nunca';
+const sheet=h=>$('#m').innerHTML=`<div class="ov" onclick="if(event.target==this)cl()"><div class="sh">${h}</div></div>`;
+const cl=()=>$('#m').innerHTML='';
+const lm=t=>$('#lm').textContent=t||'';
+function erro(e){const c=(e&&e.code)||'';
+ if(/email-already-in-use/.test(c))return'Esse usuário já existe.';
+ if(/weak-password/.test(c))return'Senha fraca (mínimo 6 caracteres).';
+ if(/invalid-email/.test(c))return'Usuário inválido. Use letras e números, sem espaços.';
+ if(/wrong-password|invalid-credential|user-not-found/.test(c))return'E-mail ou senha incorretos.';
+ if(/permission-denied/.test(c))return'Sem permissão (confira as regras e o cadastro de administrador).';
+ if(/network/.test(c))return'Sem internet.';
+ return'Erro: '+((e&&e.message)||c||'desconhecido')}
+function init(){
+ if(/^COLE/.test(FB.apiKey)){$('#lg').hidden=false;lm('Preencha o firebaseConfig no início do arquivo.');return}
+ firebase.initializeApp(FB);auth=firebase.auth();db=firebase.firestore();
+ auth.onAuthStateChanged(async u=>{
+  if(!u){$('#ad').hidden=true;$('#lg').hidden=false;if(unsub){unsub();unsub=null}return}
+  try{const a=await db.collection('admins').doc(u.uid).get();
+   if(!a.exists){await auth.signOut();lm('Esta conta não é administradora.');return}
+   $('#lg').hidden=true;$('#ad').hidden=false;lm('');escutar()}
+  catch(e){await auth.signOut();lm(erro(e))}})
+}
+async function entrar(){const b=$('#ab');b.disabled=true;lm('');
+ try{await auth.signInWithEmailAndPassword($('#au').value.trim(),$('#ap').value)}catch(e){lm(erro(e))}b.disabled=false}
+const sair=()=>auth.signOut();
+function escutar(){if(unsub)unsub();
+ unsub=db.collection('licencas').orderBy('criadoEm','desc').onSnapshot(s=>{list=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>toast(erro(e)))}
+function draw(){
+ const k=($('#q').value||'').toLowerCase().trim();
+ $('#n1').textContent=list.filter(c=>c.ativo).length;$('#n2').textContent=list.filter(c=>!c.ativo).length;$('#n3').textContent=list.filter(c=>c.suspeito).length;
+ const l=list.filter(c=>!k||(c.nome+' '+(c.usuario||'')).toLowerCase().includes(k));
+ $('#ls').innerHTML=l.length?l.map(c=>`<div class="cl"><div class="top"><h3>${esc(c.nome)}</h3><span><span class="chip ${c.ativo?'on':'off'}">${c.ativo?'Ativo':'Bloqueado'}</span>${c.suspeito?' <span class="chip sus">⚠ Suspeito</span>':''}</span></div>
+ <small>Usuário: ${esc(c.usuario||c.email||'')}</small>
+ <small>Último login: ${fdt(c.ultimoLogin)} · Trocas de aparelho: ${c.trocas||0}</small>
+ <small>Aparelho: ${c.sessao?esc((c.aparelhoInfo||'conectado')+' · '+(c.aparelho||'').slice(0,8)):'nenhum ativo'}</small>
+ <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar aparelho</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Copiar acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
+const get=id=>list.find(c=>c.id==id);
+async function up(id,p,msg){try{await db.collection('licencas').doc(id).update(p);toast(msg)}catch(e){toast(erro(e))}}
+const alt=id=>up(id,{ativo:!get(id).ativo},get(id).ativo?'Licença bloqueada':'Licença ativada');
+const deslog=id=>up(id,{sessao:null},'Aparelho deslogado');
+const limpa=id=>up(id,{suspeito:false,trocasTs:[]},'Alerta limpo');
+function copiar(id){const c=get(id);acesso(c.nome,c.usuario||c.email,null)}
+function exc(id){const c=get(id);sheet(`<h3>Excluir licença</h3><p>Apaga a licença de <b>${esc(c.nome)}</b> daqui. O login continua existindo no Firebase Authentication: apague também lá (Authentication → Usuários), senão o cliente não consegue ser cadastrado de novo com o mesmo usuário.</p><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt rd" onclick="exc2('${id}')">Excluir</button></div>`)}
+async function exc2(id){cl();try{await db.collection('licencas').doc(id).delete();toast('Licença excluída')}catch(e){toast(erro(e))}}
+function gerar(){const a='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<8;i++)s+=a[Math.floor(Math.random()*a.length)];$('#ns').value=s}
+function acesso(nome,u,senha){
+ const t=`Olá, ${nome}! Seu acesso ao sistema de comandas:\n\nLink: ${APP_URL}\nUsuário: ${u}${senha?'\nSenha: '+senha:''}\n\nO acesso funciona em 1 aparelho por vez. Se entrar em outro aparelho, o anterior sai automaticamente.`;
+ window._t=t;sheet(`<h3>Dados de acesso</h3>${senha?'':'<p>A senha só aparece na criação. Se precisar, redefina pelo Firebase.</p>'}<pre>${esc(t)}</pre><div class="row"><button class="bt gh" onclick="cl()">Fechar</button><button class="bt" onclick="navigator.clipboard.writeText(window._t).then(()=>toast('Copiado'))">Copiar</button></div>`)}
+async function criar(){
+ const nome=$('#nn').value.trim(),u=$('#nu').value.trim().toLowerCase(),s=$('#ns').value;
+ if(!nome||!u||s.length<6){toast('Preencha nome, usuário e senha (mín. 6)');return}
+ const em=u.includes('@')?u:u+'@'+DOMINIO;
+ try{
+  const sec=firebase.apps.find(a=>a.name=='sec')||firebase.initializeApp(FB,'sec');
+  const cr=await sec.auth().createUserWithEmailAndPassword(em,s);
+  await db.collection('licencas').doc(cr.user.uid).set({nome,usuario:u,email:em,ativo:true,criadoEm:Date.now(),sessao:null,aparelho:null,aparelhoInfo:'',ultimoLogin:null,trocas:0,trocasTs:[],suspeito:false});
+  await sec.auth().signOut();
+  $('#nn').value=$('#nu').value=$('#ns').value='';
+  acesso(nome,u,s)
+ }catch(e){toast(erro(e))}
+}
+init();
+</script></body></html>
