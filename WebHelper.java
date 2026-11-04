@@ -1,4 +1,4 @@
-package SEU.PACOTE;
+package br.com.arretadogo.comandas;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -53,6 +53,16 @@ public class WebHelper {
     }
 
     public static class Ponte {
+        @JavascriptInterface
+        public void abrir(String url) {
+            try {
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                act.startActivity(i);
+            } catch (Exception e) {
+            }
+        }
+
         @JavascriptInterface
         public void salvar(String nome, String texto) {
             String msg;
