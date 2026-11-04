@@ -54,13 +54,23 @@ public class WebHelper {
 
     public static class Ponte {
         @JavascriptInterface
-        public void abrir(String url) {
-            try {
-                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                act.startActivity(i);
-            } catch (Exception e) {
-            }
+        public void abrir(final String url) {
+            act.runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        act.startActivity(i);
+                    } catch (Exception e) {
+                        try {
+                            // WhatsApp sem app instalado: tenta o esquema direto e depois avisa
+                            String u = url.replace("https://wa.me/", "whatsapp://send?phone=").replace("?text=", "&text=");
+                            act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(u)));
+                        } catch (Exception e2) {
+                            Toast.makeText(act, "Não foi possível abrir o link", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+            });
         }
 
         @JavascriptInterface

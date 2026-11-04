@@ -395,7 +395,7 @@ const IM={
  info:sv('<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>'),
  cfg:sv('<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'),
  bell:sv('<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',24)};
-const abrir=u=>{if(window.Android&&Android.abrir)Android.abrir(u);else window.open(u,'_blank','noopener')};
+const abrir=u=>{try{if(window.Android&&Android.abrir){Android.abrir(u);return}}catch(e){}try{const w=window.open(u,'_blank','noopener');if(!w)location.href=u}catch(e){location.href=u}};
 let novaV=null,cfrom='home';
 const itens=c=>c.i.reduce((s,i)=>s+i.q,0);
 function openC(id,from){cfrom=from||'home';go('cmd',id)}
@@ -403,7 +403,7 @@ const rowC=(c,fn)=>`<button class="lr" onclick="${fn}"><span class="bd2">${ico()
 const gate=cb=>{if(db.pin&&unl<Date.now()){pcb=cb;sheet(PINH);return}cb()};
 /* ----- menu inicial ----- */
 function menuView(){
- const nA=db.c.filter(c=>c.a).length,nb=db.c.filter(c=>alv(c)>0).length+(novaV?1:0);
+ const nA=db.c.filter(c=>c.a).length,nb=db.c.filter(c=>alv(c)>0).length+(novaV?1:0)+avPend().length;
  const who=(lic&&lic.nome)||(db.est||'').trim()||'Garçom';
  const it=(f,a,b,ic,t,s)=>`<button class="mn" onclick="${f}"><span class="ci" style="background:linear-gradient(135deg,${a},${b})">${IM[ic]}</span><span class="tx"><b>${t}</b><small>${s}</small></span><span class="ch">›</span></button>`;
  return `<header class="mh"><button class="num" onclick="go('home')" aria-label="Comandas abertas">${nA}</button><button class="who" onclick="menuG()"><b>Salão <i>⌄</i></b><small>${esc(who)}</small></button><button class="bell" onclick="avisos()" aria-label="Avisos">${IM.bell}${nb?`<em>${nb}</em>`:''}</button></header>
@@ -486,19 +486,31 @@ function cxView(){const d=cxData(),h=db.cx||[];
 function cxConf(){const d=cxData();sheet(`<h2>Fechar caixa</h2><p>Vendido: <b>${brl(d.tt)}</b> em ${d.f.length} comanda${d.f.length==1?'':'s'}. Depois de fechar, o próximo caixa começa do zero. As comandas continuam guardadas.</p>${d.ab.length?`<p>⚠ Há ${d.ab.length} comanda${d.ab.length>1?'s':''} aberta${d.ab.length>1?'s':''}. Elas entram no próximo caixa quando forem encerradas.</p>`:''}<div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt" onclick="cxFechar()">Fechar caixa</button></div>`)}
 function cxFechar(){const d=cxData();(db.cx=db.cx||[]).unshift({t:Date.now(),de:d.t0,n:d.f.length,total:r2(d.tt),tx:r2(d.tx),fm:d.fm,sem:d.sem});db.cxT=Date.now();save();cl();render();toast('Caixa fechado')}
 /* ----- avisos, versão e suporte ----- */
-function avisos(){const al=db.c.filter(c=>alv(c)>0).sort((a,b)=>a.t-b.t);
- sheet(`<h2>Avisos</h2>${novaV?`<div class="nv"><div><b>Nova versão ${esc(novaV.versao)}</b><small>${esc(novaV.notas||'')}</small></div><button class="bt" onclick="atualizarApp()">Atualizar</button></div>`:''}${al.length?'<p>Comandas abertas há muito tempo:</p>'+al.map(c=>rowC(c,`cl();openC('${c.id}','menu')`)).join(''):(novaV?'':'<div class="em">Sem avisos no momento.</div>')}<div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
+/* avisos publicados no painel admin (config/app) */
+const avLidos=()=>{try{return JSON.parse(localStorage.getItem('avl')||'[]')}catch(e){return[]}};
+const avPend=()=>{const l=avLidos();return(CFG.avisos||[]).filter(a=>a&&a.id&&!l.includes(a.id))};
+function avLer(id){try{localStorage.setItem('avl',JSON.stringify([...avLidos(),id].slice(-100)))}catch(e){}avisos();if(view=='menu')render()}
+function avisos(){const al=db.c.filter(c=>alv(c)>0).sort((a,b)=>a.t-b.t),ap=avPend();
+ sheet(`<h2>Avisos</h2>${novaV?`<div class="nv"><div><b>Nova versão ${esc(novaV.versao)}</b><small>${esc(novaV.notas||'')}</small></div><button class="bt" onclick="atualizarApp()">Atualizar</button></div>`:''}${ap.map(a=>`<div class="box"><b>${esc(a.t||'Aviso')}</b><p style="margin:4px 0 8px">${esc(a.x||'')}</p><button class="bt gh sm" style="padding:6px 12px" onclick="avLer('${esc(a.id)}')">Entendi</button></div>`).join('')}${al.length?'<p>Comandas abertas há muito tempo:</p>'+al.map(c=>rowC(c,`cl();openC('${c.id}','menu')`)).join(''):(novaV||ap.length?'':'<div class="em">Sem avisos no momento.</div>')}<div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 const vn=v=>String(v).split('.').map(x=>parseInt(x)||0);
 const maior=(a,b)=>{a=vn(a);b=vn(b);for(let i=0;i<3;i++){if((a[i]||0)!=(b[i]||0))return(a[i]||0)>(b[i]||0)}return false};
-function checkV(manual){fetch('versao.json?'+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
-  if(j&&j.versao&&maior(j.versao,APP.versao)){novaV=j;if(view=='menu')render();if(manual)avisos()}
-  else{novaV=null;if(manual)toast('Você já está na versão mais recente')}}).catch(()=>{if(manual)toast('Sem internet para verificar')})}
+let CFG={};try{CFG=JSON.parse(localStorage.getItem('cfg1')||'{}')||{}}catch(e){}
+function aplicaCfg(j,manual){
+ if(j&&j.versao&&maior(j.versao,APP.versao)){novaV={versao:j.versao,notas:j.notas||''};if(view=='menu')render();if(manual)avisos()}
+ else{novaV=null;if(view=='menu')render();if(manual)toast('Você já está na versão mais recente')}
+ const su=$('#ls'),n=CFG.suporte||LIC.suporte;if(su&&n)su.textContent='Suporte: '+n}
+function checkV(manual){
+ const fb=()=>fetch('versao.json?'+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{if(j&&j.versao&&!CFG.versao)aplicaCfg(j,manual);else aplicaCfg(CFG,manual)}).catch(()=>{aplicaCfg(CFG,0);if(manual)toast('Sem internet para verificar')});
+ if(!window.firebase||!fdb){fb();return}
+ fdb.collection('config').doc('app').get().then(s=>{if(s.exists){CFG=s.data()||{};try{localStorage.setItem('cfg1',JSON.stringify(CFG))}catch(e){}aplicaCfg(CFG,manual)}else fb()}).catch(fb)}
 function atualizarApp(){const fim=()=>location.reload();
  (window.caches?caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('comandas')).map(x=>caches.delete(x)))):Promise.resolve())
  .then(()=>navigator.serviceWorker?navigator.serviceWorker.getRegistrations().then(r=>Promise.all(r.map(x=>x.unregister()))):0).then(fim,fim)}
-function suporte(){const n=(APP.suporte||'').replace(/\D/g,'');if(!n){toast('Número de suporte não configurado');return}
+function suporte(){let n=String(CFG.suporte||APP.suporte||LIC.suporte||'').replace(/\D/g,'');
+ if(!n){toast('Número de suporte não configurado no painel admin');return}
+ if(n.length<=11)n='55'+n.replace(/^0+/,'');
  abrir('https://wa.me/'+n+'?text='+encodeURIComponent('Olá! Preciso de suporte no sistema de comandas.\nCliente: '+((lic&&lic.nome)||'-')+'\nVersão: '+APP.versao+'\nTerminal: '+TERM))}
-function sobre(){sheet(`<div class="sob">${LOGO?`<img src="${LOGO}" alt="">`:''}<h2>Sistema de comandas</h2><p>Versão <b>${APP.versao}</b></p></div>${LIC_ON&&lic?`<div class="r"><span>Licenciado para</span><b>${esc(lic.nome||'')}</b></div>`:''}<div class="r"><span>Terminal</span><b>${esc(TERM)}</b></div><p class="nt"><b>Novidades:</b> ${esc(APP.notas)}</p><button class="bt" style="width:100%" onclick="suporte()">Falar com o suporte</button><div class="fl"><button class="bt gh" onclick="checkV(1)">Verificar atualização</button><button class="bt gh" onclick="menuG()">Ajustes</button></div>${LIC_ON&&lic?`<button class="bt gh" style="width:100%;margin-top:8px" onclick="sair()">Sair da conta</button>`:''}<div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
+function sobre(){sheet(`<div class="sob">${LOGO?`<img src="${LOGO}" alt="">`:''}<h2>Sistema de comandas</h2><p>Versão <b>${APP.versao}</b></p></div>${LIC_ON&&lic?`<div class="r"><span>Licenciado para</span><b>${esc(lic.nome||'')}</b></div>`:''}<div class="r"><span>Terminal</span><b>${esc(TERM)}</b></div><p class="nt"><b>Novidades:</b> ${esc(CFG.notas||APP.notas)}</p><button class="bt" style="width:100%" onclick="suporte()">Falar com o suporte</button><div class="fl"><button class="bt gh" onclick="checkV(1)">Verificar atualização</button><button class="bt gh" onclick="menuG()">Ajustes</button></div>${LIC_ON&&lic?`<button class="bt gh" style="width:100%;margin-top:8px" onclick="sair()">Sair da conta</button>`:''}<div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 setTimeout(checkV,5000);setInterval(checkV,1800000);
 /* ---------- LICENÇA (login por cliente, 1 aparelho por vez) ---------- */
 const FB={apiKey:'AIzaSyBK0fR-piIjs-2TUA-F_jASRiwDvW6G1dY',authDomain:'comandas-licencas.firebaseapp.com',projectId:'comandas-licencas',storageBucket:'comandas-licencas.firebasestorage.app',messagingSenderId:'262986890005',appId:'1:262986890005:web:098f0613b8c10d1cf6071c'};
@@ -547,7 +559,7 @@ function licInit(){
     if(!lic)return;
     const m=chk(s.exists?s.data():null);
     if(m){forceOut(m);return}
-    lic.ver=Date.now();lic.nome=s.data().nome||lic.nome;setLic(lic);hideLg();watch(u.uid);
+    lic.ver=Date.now();lic.nome=s.data().nome||lic.nome;setLic(lic);hideLg();watch(u.uid);checkV();
    }).catch(()=>{});
   });
  }catch(e){}
@@ -573,7 +585,7 @@ async function lgEntrar(){
   const sid=uid()+uid();
   await ref.update({sessao:sid,aparelho:TERM,aparelhoInfo:((navigator.userAgent.match(/\(([^)]+)\)/)||[])[1]||'').slice(0,80),ultimoLogin:agora,trocas:(d.trocas||0)+(troca?1:0),trocasTs:ts.slice(-10)});
   lic={uid:id,nome:d.nome||u,sessao:sid,ver:agora};setLic(lic);
-  $('#lp').value='';watch(id);hideLg();
+  $('#lp').value='';watch(id);hideLg();checkV();
  }catch(e){lgMsg(msgErro(e))}
  finally{b.disabled=false;b.textContent='Entrar'}
 }

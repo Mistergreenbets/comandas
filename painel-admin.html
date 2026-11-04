@@ -8,38 +8,45 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
-:root{--lt:#9be03c;--ro:#2d0f8f;--mu:#5b5873;--ln:#e4e0f0;--gr:#23222b}
+:root{--bg:#f3f6fb;--pr:#3fa535;--ro:#2a3142;--mu:#7c8497;--ln:#e3e8f1;--gr:#2a3142;--lt:#9be03c}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--lt);color:var(--ro);font:16px/1.35 system-ui,sans-serif}
-h1,h2,h3,b,.bt{font-family:'Poppins',system-ui,sans-serif}
-header{position:sticky;top:0;z-index:10;background:var(--ro);color:#fff;display:flex;align-items:center;gap:8px;padding:14px 16px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px #2d0f8f55}
-header h1{flex:1;margin:0;font-size:20px}
+html,body{margin:0;background:var(--bg);color:var(--ro);font:16px/1.35 system-ui,sans-serif}
+h1,h2,h3,b,.bt,.tabs button{font-family:'Poppins',system-ui,sans-serif}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#4aa935,#8cd33f);color:#fff;display:flex;align-items:center;gap:8px;padding:14px 16px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px #4aa93555}
+header h1{flex:1;margin:0;font-size:21px}
 main{max-width:760px;margin:0 auto;padding:14px 12px 60px}
-.box{background:#fff;border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px #2d0f8f26}
-input{font:inherit;width:100%;color:var(--gr);background:#fff;border:2px solid var(--ln);border-radius:14px;padding:10px 12px;margin-top:8px}
-input:focus{outline:0;border-color:var(--ro)}
+.box{background:#fff;border-radius:20px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px #1f2a4414}
+.box h3{margin:0}
+.box p{color:var(--mu);margin:4px 0 0;font-size:14px}
+input,textarea{font:inherit;width:100%;color:var(--gr);background:#fff;border:2px solid var(--ln);border-radius:14px;padding:10px 12px;margin-top:8px}
+textarea{resize:vertical;min-height:70px}
+input:focus,textarea:focus{outline:0;border-color:var(--pr)}
 button{font:inherit;cursor:pointer}
-.bt{background:var(--ro);color:#fff;border:0;border-radius:14px;padding:10px 14px;font-weight:600}
-.bt.gh{background:#fff;color:var(--ro);border:2px solid var(--ro)}
-.bt.rd{background:#c2272d}
+.bt{background:var(--pr);color:#fff;border:0;border-radius:14px;padding:11px 14px;font-weight:600}
+.bt.gh{background:#fff;color:var(--pr);border:2px solid var(--pr)}
+.bt.rd{background:#e5484d}
 .bt.sm{padding:7px 10px;font-size:14px;border-radius:12px}
+header .bt.gh{background:#ffffff33;color:#fff;border:0}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .row>*{flex:1}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;padding:11px;border-radius:999px;border:0;background:#fff;color:var(--ro);font-weight:600;box-shadow:0 2px 8px #1f2a4410}
+.tabs .on{background:var(--pr);color:#fff}
 .chip{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}
-.on{background:var(--lt);color:var(--gr)}.off{background:#c2272d;color:#fff}.sus{background:#ffb300;color:var(--gr)}
-.cl{background:#fff;border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 4px 14px #2d0f8f26}
+.on.chip{background:var(--lt);color:var(--gr)}.off{background:#e5484d;color:#fff}.sus{background:#ffb300;color:var(--gr)}
+.cl{background:#fff;border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 4px 14px #1f2a4414}
 .cl h3{margin:0 0 2px;font-size:18px}
 .cl small{display:block;color:var(--mu);word-break:break-all}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .stats{display:flex;gap:8px;margin-bottom:12px}
-.stats div{flex:1;background:#fff;border-radius:16px;padding:10px;text-align:center;box-shadow:0 4px 14px #2d0f8f26}
-.stats b{display:block;font-size:22px}
-#lg{position:fixed;inset:0;background:var(--lt);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
-#lg[hidden],#ad[hidden]{display:none}
-.lgc{background:#fff;border-radius:26px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 8px 28px #2d0f8f44}
+.stats div{flex:1;background:#fff;border-radius:16px;padding:10px;text-align:center;box-shadow:0 4px 14px #1f2a4414;color:var(--mu);font-size:13px}
+.stats b{display:block;font-size:22px;color:var(--ro)}
+#lg{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+#lg[hidden],#ad[hidden],.pg[hidden]{display:none}
+.lgc{background:#fff;border-radius:26px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 8px 28px #1f2a4433}
 .lgc h2{margin:0 0 4px}
 #lm{color:#c2272d;font-weight:600;min-height:20px;margin:10px 0 0;font-size:14px}
-.ov{position:fixed;inset:0;background:#1a0a4f99;z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.ov{position:fixed;inset:0;background:#0f1a2e99;z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .sh{background:#fff;width:100%;max-width:760px;border-radius:26px 26px 0 0;padding:18px 16px 24px}
 .sh pre{white-space:pre-wrap;background:#f0fada;border-radius:14px;padding:12px;font:14px/1.4 ui-monospace,monospace;color:var(--gr)}
 .tt{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--gr);color:#fff;padding:10px 16px;border-radius:14px;z-index:40}
@@ -50,14 +57,30 @@ button{font:inherit;cursor:pointer}
 <div class="row"><button class="bt" id="ab" onclick="entrar()">Entrar</button></div><p id="lm"></p></div></div>
 
 <div id="ad" hidden>
-<header><h1>Licenças</h1><button class="bt gh sm" onclick="sair()">Sair</button></header>
+<header><h1>Painel Comandas</h1><button class="bt gh sm" onclick="sair()">Sair</button></header>
 <main>
+ <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Licenças</button><button id="t2" onclick="aba(2)">Configurações</button><button id="t3" onclick="aba(3)">Avisos</button></div>
+ <div id="p2" class="pg" hidden>
+  <div class="box"><h3>Suporte (WhatsApp)</h3><p>Número com DDD (o 55 é adicionado sozinho). O botão "Falar com o suporte" do app usa este número.</p>
+   <input id="cs" inputmode="tel" placeholder="Ex.: 85 99999-9999"></div>
+  <div class="box"><h3>Aviso de nova versão</h3><p>Versão atual do app instalado: <b id="vapp">1.1.0</b>. Ao publicar uma versão maior, aparece o banner "Atualizar" nos aparelhos.</p>
+   <input id="cv" placeholder="Versão publicada (ex.: 1.2.0)"><textarea id="cn" placeholder="Novidades desta versão"></textarea></div>
+  <button class="bt" style="width:100%" onclick="salvaCfg()">Salvar configurações</button>
+ </div>
+ <div id="p3" class="pg" hidden>
+  <div class="box"><h3>Novo aviso</h3><p>Aparece no sininho do app de todos os clientes.</p>
+   <input id="at" placeholder="Título (ex.: Manutenção hoje às 23h)"><textarea id="ax" placeholder="Mensagem"></textarea>
+   <div class="row"><button class="bt" onclick="novoAviso()">Publicar aviso</button></div></div>
+  <div id="avl"></div>
+ </div>
+ <div id="p1" class="pg">
  <div class="stats"><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
  <div class="box"><h3 style="margin:0">Novo cliente</h3>
   <input id="nn" placeholder="Nome do cliente / estabelecimento"><input id="nu" placeholder="Usuário ou e-mail (ex.: bardaana)" autocapitalize="none">
   <input id="ns" placeholder="Senha (mín. 6 caracteres)"><div class="row"><button class="bt gh" onclick="gerar()">Gerar senha</button><button class="bt" onclick="criar()">Criar licença</button></div></div>
  <input id="q" placeholder="Buscar cliente" oninput="draw()" style="margin:0 0 12px">
  <div id="ls"></div>
+ </div>
 </main></div>
 <div id="m"></div>
 
@@ -69,7 +92,7 @@ const APP_URL='https://mistergreenbets.github.io/comandas/';   // endereço do a
 /* ================================================= */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let db,auth,list=[],unsub=null;
+let db,auth,list=[],unsub=null,unc=null,CFG={};
 const toast=t=>{const e=document.createElement('div');e.className='tt';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),2200)};
 const fdt=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'nunca';
 const sheet=h=>$('#m').innerHTML=`<div class="ov" onclick="if(event.target==this)cl()"><div class="sh">${h}</div></div>`;
@@ -87,10 +110,10 @@ function init(){
  if(/^COLE/.test(FB.apiKey)){$('#lg').hidden=false;lm('Preencha o firebaseConfig no início do arquivo.');return}
  firebase.initializeApp(FB);auth=firebase.auth();db=firebase.firestore();
  auth.onAuthStateChanged(async u=>{
-  if(!u){$('#ad').hidden=true;$('#lg').hidden=false;if(unsub){unsub();unsub=null}return}
+  if(!u){$('#ad').hidden=true;$('#lg').hidden=false;if(unsub){unsub();unsub=null}if(unc){unc();unc=null}return}
   try{const a=await db.collection('admins').doc(u.uid).get();
    if(!a.exists){await auth.signOut();lm('Esta conta não é administradora.');return}
-   $('#lg').hidden=true;$('#ad').hidden=false;lm('');escutar()}
+   $('#lg').hidden=true;$('#ad').hidden=false;lm('');escutar();escutaCfg()}
   catch(e){await auth.signOut();lm(erro(e))}})
 }
 async function entrar(){const b=$('#ab');b.disabled=true;lm('');
@@ -132,5 +155,23 @@ async function criar(){
   acesso(nome,u,s)
  }catch(e){toast(erro(e))}
 }
+const APP_VER='1.1.0';
+function aba(n){[1,2,3].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.toggle('on',i==n)})}
+function escutaCfg(){if(unc)unc();
+ unc=db.collection('config').doc('app').onSnapshot(s=>{CFG=s.exists?s.data():{};
+  const f=(id,v)=>{const e=$(id);if(e&&document.activeElement!==e)e.value=v||''};
+  f('#cs',CFG.suporte);f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
+async function salvaCfg(){
+ const suporte=$('#cs').value.trim(),versao=$('#cv').value.trim(),notas=$('#cn').value.trim();
+ if(versao&&!/^\d+(\.\d+){0,2}$/.test(versao)){toast('Versão no formato 1.2.0');return}
+ try{await db.collection('config').doc('app').set({suporte,versao,notas,atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
+async function novoAviso(){
+ const t=$('#at').value.trim(),x=$('#ax').value.trim();if(!t){toast('Informe o título');return}
+ const a=(CFG.avisos||[]).concat([{id:Date.now().toString(36),t,x,ts:Date.now()}]).slice(-20);
+ try{await db.collection('config').doc('app').set({avisos:a},{merge:true});$('#at').value=$('#ax').value='';toast('Aviso publicado')}catch(e){toast(erro(e))}}
+async function delAviso(id){
+ try{await db.collection('config').doc('app').set({avisos:(CFG.avisos||[]).filter(a=>a.id!=id)},{merge:true});toast('Aviso removido')}catch(e){toast(erro(e))}}
+function drawAv(){const l=(CFG.avisos||[]).slice().reverse();
+ $('#avl').innerHTML=l.length?l.map(a=>`<div class="cl"><div class="top"><h3>${esc(a.t)}</h3><small style="flex:none">${fdt(a.ts)}</small></div><p style="margin:4px 0 0">${esc(a.x)}</p><div class="row"><button class="bt gh sm" onclick="delAviso('${esc(a.id)}')">Remover</button></div></div>`).join(''):'<div class="box">Nenhum aviso publicado.</div>'}
 init();
 </script></body></html>
