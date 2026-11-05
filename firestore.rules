@@ -20,8 +20,14 @@ service cloud.firestore {
       allow update: if ehAdmin() || (
         logado() && request.auth.uid == uid &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['sessao','aparelho','aparelhoInfo','ultimoLogin','trocas','trocasTs','suspeito'])
+          .hasOnly(['sessao','aparelho','aparelhoInfo','ultimoLogin','trocas','trocasTs','suspeito','visto'])
       );
+    }
+
+    // Configurações do app (suporte, versão e avisos): qualquer um lê, só o admin altera
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if ehAdmin();
     }
   }
 }

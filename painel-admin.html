@@ -32,6 +32,9 @@ header .bt.gh{background:#ffffff33;color:#fff;border:0}
 .tabs{display:flex;gap:8px;margin-bottom:12px}
 .tabs button{flex:1;padding:11px;border-radius:999px;border:0;background:#fff;color:var(--ro);font-weight:600;box-shadow:0 2px 8px #1f2a4410}
 .tabs .on{background:var(--pr);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.grid .cl{margin:0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c3c9d6;margin-right:6px}.dot.on{background:#3fa535;box-shadow:0 0 0 3px #3fa53533}
+.vw{display:flex;gap:6px;margin-bottom:12px}.vw button{flex:none;width:46px;padding:9px;border-radius:12px;border:2px solid var(--ln);background:#fff;font-size:18px}.vw .on{border-color:var(--pr);background:#eaf7e6}
 .chip{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}
 .on.chip{background:var(--lt);color:var(--gr)}.off{background:#e5484d;color:#fff}.sus{background:#ffb300;color:var(--gr)}
 .cl{background:#fff;border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 4px 14px #1f2a4414}
@@ -74,11 +77,11 @@ header .bt.gh{background:#ffffff33;color:#fff;border:0}
   <div id="avl"></div>
  </div>
  <div id="p1" class="pg">
- <div class="stats"><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
+ <div class="stats"><div><b id="n4">0</b>Online agora</div><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
  <div class="box"><h3 style="margin:0">Novo cliente</h3>
   <input id="nn" placeholder="Nome do cliente / estabelecimento"><input id="nu" placeholder="Usuário ou e-mail (ex.: bardaana)" autocapitalize="none">
   <input id="ns" placeholder="Senha (mín. 6 caracteres)"><div class="row"><button class="bt gh" onclick="gerar()">Gerar senha</button><button class="bt" onclick="criar()">Criar licença</button></div></div>
- <input id="q" placeholder="Buscar cliente" oninput="draw()" style="margin:0 0 12px">
+ <div class="vw"><input id="q" placeholder="Buscar cliente" oninput="draw()" style="margin:0;flex:1"><button id="vl" onclick="modo('l')" aria-label="Lista">☰</button><button id="vg" onclick="modo('g')" aria-label="Grade">▦</button></div>
  <div id="ls"></div>
  </div>
 </main></div>
@@ -121,15 +124,21 @@ async function entrar(){const b=$('#ab');b.disabled=true;lm('');
 const sair=()=>auth.signOut();
 function escutar(){if(unsub)unsub();
  unsub=db.collection('licencas').orderBy('criadoEm','desc').onSnapshot(s=>{list=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>toast(erro(e)))}
+const MODO=()=>{try{return localStorage.getItem('vmodo')||'l'}catch(e){return'l'}};
+function modo(m){try{localStorage.setItem('vmodo',m)}catch(e){}draw()}
+const onl=c=>c.sessao&&c.visto&&Date.now()-c.visto<300000;
 function draw(){
- const k=($('#q').value||'').toLowerCase().trim();
- $('#n1').textContent=list.filter(c=>c.ativo).length;$('#n2').textContent=list.filter(c=>!c.ativo).length;$('#n3').textContent=list.filter(c=>c.suspeito).length;
+ const k=($('#q').value||'').toLowerCase().trim(),m=MODO();
+ $('#vl').classList.toggle('on',m=='l');$('#vg').classList.toggle('on',m=='g');
+ $('#n1').textContent=list.filter(c=>c.ativo).length;$('#n2').textContent=list.filter(c=>!c.ativo).length;$('#n3').textContent=list.filter(c=>c.suspeito).length;$('#n4').textContent=list.filter(onl).length;
  const l=list.filter(c=>!k||(c.nome+' '+(c.usuario||'')).toLowerCase().includes(k));
+ $('#ls').className=m=='g'?'grid':'';
  $('#ls').innerHTML=l.length?l.map(c=>`<div class="cl"><div class="top"><h3>${esc(c.nome)}</h3><span><span class="chip ${c.ativo?'on':'off'}">${c.ativo?'Ativo':'Bloqueado'}</span>${c.suspeito?' <span class="chip sus">⚠ Suspeito</span>':''}</span></div>
  <small>Usuário: ${esc(c.usuario||c.email||'')}</small>
- <small>Último login: ${fdt(c.ultimoLogin)} · Trocas de aparelho: ${c.trocas||0}</small>
+ <small><span class="dot ${onl(c)?'on':''}"></span>${onl(c)?'Online agora':(c.visto?'Visto '+fdt(c.visto):'Último login: '+fdt(c.ultimoLogin))} · Trocas: ${c.trocas||0}</small>
  <small>Aparelho: ${c.sessao?esc((c.aparelhoInfo||'conectado')+' · '+(c.aparelho||'').slice(0,8)):'nenhum ativo'}</small>
- <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar aparelho</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Copiar acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
+ <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
+setInterval(()=>{if(list.length&&!$('#ad').hidden)draw()},60000);
 const get=id=>list.find(c=>c.id==id);
 async function up(id,p,msg){try{await db.collection('licencas').doc(id).update(p);toast(msg)}catch(e){toast(erro(e))}}
 const alt=id=>up(id,{ativo:!get(id).ativo},get(id).ativo?'Licença bloqueada':'Licença ativada');
@@ -139,9 +148,10 @@ function copiar(id){const c=get(id);acesso(c.nome,c.usuario||c.email,null)}
 function exc(id){const c=get(id);sheet(`<h3>Excluir licença</h3><p>Apaga a licença de <b>${esc(c.nome)}</b> daqui. O login continua existindo no Firebase Authentication: apague também lá (Authentication → Usuários), senão o cliente não consegue ser cadastrado de novo com o mesmo usuário.</p><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt rd" onclick="exc2('${id}')">Excluir</button></div>`)}
 async function exc2(id){cl();try{await db.collection('licencas').doc(id).delete();toast('Licença excluída')}catch(e){toast(erro(e))}}
 function gerar(){const a='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<8;i++)s+=a[Math.floor(Math.random()*a.length)];$('#ns').value=s}
+function wapp(){const n=($('#wn').value||'').replace(/\D/g,'');if(n.length<10){toast('Informe o WhatsApp do cliente com DDD');return}const t=encodeURIComponent(window._t);window.open('https://wa.me/'+(n.length<=11?'55'+n:n)+'?text='+t,'_blank','noopener')}
 function acesso(nome,u,senha){
  const t=`Olá, ${nome}! Seu acesso ao sistema de comandas:\n\nLink: ${APP_URL}\nUsuário: ${u}${senha?'\nSenha: '+senha:''}\n\nO acesso funciona em 1 aparelho por vez. Se entrar em outro aparelho, o anterior sai automaticamente.`;
- window._t=t;sheet(`<h3>Dados de acesso</h3>${senha?'':'<p>A senha só aparece na criação. Se precisar, redefina pelo Firebase.</p>'}<pre>${esc(t)}</pre><div class="row"><button class="bt gh" onclick="cl()">Fechar</button><button class="bt" onclick="navigator.clipboard.writeText(window._t).then(()=>toast('Copiado'))">Copiar</button></div>`)}
+ window._t=t;sheet(`<h3>Dados de acesso</h3>${senha?'':'<p>A senha só aparece na criação. Se precisar, redefina pelo Firebase.</p>'}<pre>${esc(t)}</pre><input id="wn" inputmode="tel" placeholder="WhatsApp do cliente (DDD + número)"><div class="row"><button class="bt" style="background:#25a244" onclick="wapp()">Enviar por WhatsApp</button><button class="bt gh" onclick="navigator.clipboard.writeText(window._t).then(()=>toast('Copiado'))">Copiar</button><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 async function criar(){
  const nome=$('#nn').value.trim(),u=$('#nu').value.trim().toLowerCase(),s=$('#ns').value;
  if(!nome||!u||s.length<6){toast('Preencha nome, usuário e senha (mín. 6)');return}
