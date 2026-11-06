@@ -180,8 +180,11 @@ header.mh{padding:14px 14px 18px;gap:12px}
 .sob h2{margin:8px 0 0}
 .nt{font-size:13px}
 
-.pl{object-fit:contain!important;padding:16%;opacity:.55}
-.th.pl{padding:10px}
+.ti{position:relative;overflow:hidden}
+.ti::before{content:'';position:absolute;inset:0;background:var(--phu) center/62% no-repeat;opacity:.55}
+.ti img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;aspect-ratio:auto!important;display:block}
+.tp .ti{width:100%;aspect-ratio:1;background:var(--ln)}
+.tp .ti img{aspect-ratio:auto!important}
 .seg{display:flex;gap:6px;margin:6px 0 4px}
 .seg button{flex:1;padding:10px 4px;border-radius:12px;border:2px solid var(--ln);background:#fff;color:var(--ro);font:600 13px 'Poppins',system-ui,sans-serif}
 .seg .on{background:var(--pr);border-color:var(--pr);color:#fff}
@@ -201,7 +204,7 @@ html.dk .tp em{background:var(--pr)}
 html.dk .sw{background:#3a4358}html.dk .sw.on{background:var(--pr)}
 html.dk .tp small,html.dk .tp b{color:var(--ro)}
 html.dk .th,html.dk .ph,html.dk .tp img,html.dk .tp i{background:var(--ln)}
-html.dk .pl{opacity:.35}
+html.dk .ti::before{opacity:.35}
 html.dk .nv .bt{background:#fff;color:#2f8a24}
 html.dk .ov{background:#000b}
 </style></head><body>
@@ -231,7 +234,7 @@ const taxa=c=>c.fx!=null?c.fx:sub(c)*c.pct/100;
 const tot=c=>sub(c)+taxa(c);
 const getC=()=>db.c.find(c=>c.id==cur);
 const prod=id=>db.p.find(p=>p.id==id);
-const thumb=(img,nm)=>img?`<img class="th" src="${img}" alt="" onerror="this.onerror=null;this.src=PH;this.classList.add('pl')">`:`<img class="th pl" src="${PH}" alt="">`;
+const thumb=(img,nm)=>`<div class="th ti">${img?`<img src="${img}" alt="" onerror="this.remove()">`:''}</div>`;
 function toast(t){const e=document.createElement('div');e.className='tt';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),1800)}
 const sheet=(h,k)=>$('#m').innerHTML=`<div class="ov" onclick="if(event.target==this)cl()"><div class="sh${k?' '+k:''}">${h}</div></div>`;
 const cl=()=>$('#m').innerHTML='';
@@ -354,7 +357,7 @@ function addSheet(){
  <div class="fl"><button class="bt gh" onclick="cl()">Fechar</button><button class="bt ro" onclick="avulso()">Adicionar avulso</button></div>`);tl()}
 function tl(){const q=($('#q')||{value:''}).value.toLowerCase(),c=getC();
  const l=db.p.filter(p=>p.n.toLowerCase().includes(q));
- $('#tl').innerHTML=l.length?l.map(p=>{const it=c.i.find(i=>i.pid==p.id);return `<button class="tp" onclick="addP('${p.id}')">${p.img?`<img src="${p.img}" alt="" onerror="this.onerror=null;this.src=PH;this.classList.add('pl')">`:`<img class="pl" src="${PH}" alt="">`}${it?`<em>${it.q}</em>`:''}<b>${esc(p.n)}</b><small>${brl(p.v)}</small></button>`}).join(''):`<div class="em" style="grid-column:1/-1;padding:16px">${db.p.length?'Nenhum produto encontrado.':'Cardápio vazio. Cadastre produtos na tela 🍸 da lista de comandas.'}</div>`}
+ $('#tl').innerHTML=l.length?l.map(p=>{const it=c.i.find(i=>i.pid==p.id);return `<button class="tp" onclick="addP('${p.id}')"><div class="ti">${p.img?`<img src="${p.img}" alt="" onerror="this.remove()">`:''}</div>${it?`<em>${it.q}</em>`:''}<b>${esc(p.n)}</b><small>${brl(p.v)}</small></button>`}).join(''):`<div class="em" style="grid-column:1/-1;padding:16px">${db.p.length?'Nenhum produto encontrado.':'Cardápio vazio. Cadastre produtos na tela 🍸 da lista de comandas.'}</div>`}
 function addP(id){const c=getC(),p=prod(id);let i=c.i.find(x=>x.pid==id&&x.v==p.v);
  if(i)i.q++;else c.i.push({id:uid(),pid:id,d:p.n,v:p.v,q:1});
  save();tl();render()}
@@ -413,7 +416,7 @@ function aplicaTema(){const t=TEMA(),d=t=='e'||(t=='a'&&window.matchMedia&&match
 function setTema(t){try{localStorage.setItem('tema',t)}catch(e){}aplicaTema();document.querySelectorAll('.seg [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t==t));const b=$('#tmb');if(b)b.textContent=document.documentElement.classList.contains('dk')?'☀️':'🌙'}
 function altTema(){setTema(document.documentElement.classList.contains('dk')?'c':'e')}
 try{matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(TEMA()=='a')aplicaTema()})}catch(e){}
-aplicaTema();
+aplicaTema();document.documentElement.style.setProperty('--phu','url("'+PH+'")');
 const LOGO=(document.querySelector('#splash img')||{}).src||'';
 const sv=(p,z)=>`<svg viewBox="0 0 24 24" width="${z||28}" height="${z||28}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const IM={
