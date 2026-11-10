@@ -35,6 +35,9 @@ header .bt.gh{background:#ffffff33;color:#fff;border:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.grid .cl{margin:0}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c3c9d6;margin-right:6px}.dot.on{background:#3fa535;box-shadow:0 0 0 3px #3fa53533}
 .vw{display:flex;gap:6px;margin-bottom:12px}.vw button{flex:none;width:46px;padding:9px;border-radius:12px;border:2px solid var(--ln);background:#fff;font-size:18px}.vw .on{border-color:var(--pr);background:#eaf7e6}
+.chip.ts{background:#ffc83d;color:#5a3a00}.chip.ex{background:#e5484d;color:#fff}
+select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);border-radius:14px;padding:10px 12px;margin-top:8px;width:100%}
+.tr{display:flex;gap:8px}.tr>*{flex:1}
 .chip{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}
 .on.chip{background:var(--lt);color:var(--gr)}.off{background:#e5484d;color:#fff}.sus{background:#ffb300;color:var(--gr)}
 .cl{background:#fff;border-radius:20px;padding:14px;margin-bottom:10px;box-shadow:0 4px 14px #1f2a4414}
@@ -45,7 +48,7 @@ header .bt.gh{background:#ffffff33;color:#fff;border:0}
 .stats div{flex:1;background:#fff;border-radius:16px;padding:10px;text-align:center;box-shadow:0 4px 14px #1f2a4414;color:var(--mu);font-size:13px}
 .stats b{display:block;font-size:22px;color:var(--ro)}
 #lg{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
-#lg[hidden],#ad[hidden],.pg[hidden]{display:none}
+#lg[hidden],#ad[hidden],.pg[hidden],#tbx[hidden],#tdica[hidden]{display:none}
 .lgc{background:#fff;border-radius:26px;padding:22px 18px;width:100%;max-width:380px;box-shadow:0 8px 28px #1f2a4433}
 .lgc h2{margin:0 0 4px}
 #lm{color:#c2272d;font-weight:600;min-height:20px;margin:10px 0 0;font-size:14px}
@@ -77,10 +80,13 @@ header .bt.gh{background:#ffffff33;color:#fff;border:0}
   <div id="avl"></div>
  </div>
  <div id="p1" class="pg">
- <div class="stats"><div><b id="n4">0</b>Online agora</div><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
+ <div class="stats"><div><b id="n5">0</b>Em teste</div><div><b id="n4">0</b>Online agora</div><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
  <div class="box"><h3 style="margin:0">Novo cliente</h3>
   <input id="nn" placeholder="Nome do cliente / estabelecimento"><input id="nu" placeholder="Usuário ou e-mail (ex.: bardaana)" autocapitalize="none">
-  <input id="ns" placeholder="Senha (mín. 6 caracteres)"><div class="row"><button class="bt gh" onclick="gerar()">Gerar senha</button><button class="bt" onclick="criar()">Criar licença</button></div></div>
+  <input id="ns" placeholder="Senha (mín. 6 caracteres)">
+  <select id="tp" onchange="tpMud()"><option value="v">Licença vitalícia (sem teste)</option><option value="t">Teste grátis</option></select>
+  <div class="tr" id="tbx" hidden><input id="tn" inputmode="numeric" placeholder="Quantidade" value="1"><select id="tu"><option value="h">horas</option><option value="d" selected>dias</option></select></div>
+  <p id="tdica" hidden style="font-size:13px">O teste começa no primeiro login do cliente. Máximo de 7 dias (168 horas).</p><div class="row"><button class="bt gh" onclick="gerar()">Gerar senha</button><button class="bt" onclick="criar()">Criar licença</button></div></div>
  <div class="vw"><input id="q" placeholder="Buscar cliente" oninput="draw()" style="margin:0;flex:1"><button id="vl" onclick="modo('l')" aria-label="Lista">☰</button><button id="vg" onclick="modo('g')" aria-label="Grade">▦</button></div>
  <div id="ls"></div>
  </div>
@@ -126,43 +132,53 @@ function escutar(){if(unsub)unsub();
  unsub=db.collection('licencas').orderBy('criadoEm','desc').onSnapshot(s=>{list=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>toast(erro(e)))}
 const MODO=()=>{try{return localStorage.getItem('vmodo')||'l'}catch(e){return'l'}};
 function modo(m){try{localStorage.setItem('vmodo',m)}catch(e){}draw()}
+function tpMud(){const t=$('#tp').value=='t';$('#tbx').hidden=!t;$('#tdica').hidden=!t}
+function tms(n,u){n=parseInt(n,10);if(!n||n<1)return 0;const ms=n*(u=='d'?864e5:36e5);return ms>7*864e5?0:ms}
+function tdesc(ms){const h=Math.round(ms/36e5);return h%24==0&&h>=24?(h/24)+(h==24?' dia':' dias'):h+(h==1?' hora':' horas')}
+function rest(x){const m=x-Date.now();if(m<=0)return'expirado';const h=Math.floor(m/36e5),d=Math.floor(h/24);return d>=1?d+'d '+(h%24)+'h':h>=1?h+'h '+Math.floor(m%36e5/6e4)+'min':Math.max(1,Math.ceil(m/6e4))+' min'}
+const exp=c=>c.teste&&c.expiraEm&&Date.now()>c.expiraEm;
 const onl=c=>c.sessao&&c.visto&&Date.now()-c.visto<300000;
 function draw(){
  const k=($('#q').value||'').toLowerCase().trim(),m=MODO();
  $('#vl').classList.toggle('on',m=='l');$('#vg').classList.toggle('on',m=='g');
- $('#n1').textContent=list.filter(c=>c.ativo).length;$('#n2').textContent=list.filter(c=>!c.ativo).length;$('#n3').textContent=list.filter(c=>c.suspeito).length;$('#n4').textContent=list.filter(onl).length;
+ $('#n1').textContent=list.filter(c=>c.ativo).length;$('#n2').textContent=list.filter(c=>!c.ativo).length;$('#n3').textContent=list.filter(c=>c.suspeito).length;$('#n4').textContent=list.filter(onl).length;$('#n5').textContent=list.filter(c=>c.teste&&!exp(c)).length;
  const l=list.filter(c=>!k||(c.nome+' '+(c.usuario||'')).toLowerCase().includes(k));
  $('#ls').className=m=='g'?'grid':'';
- $('#ls').innerHTML=l.length?l.map(c=>`<div class="cl"><div class="top"><h3>${esc(c.nome)}</h3><span><span class="chip ${c.ativo?'on':'off'}">${c.ativo?'Ativo':'Bloqueado'}</span>${c.suspeito?' <span class="chip sus">⚠ Suspeito</span>':''}</span></div>
+ $('#ls').innerHTML=l.length?l.map(c=>`<div class="cl"><div class="top"><h3>${esc(c.nome)}</h3><span><span class="chip ${c.ativo?'on':'off'}">${c.ativo?'Ativo':'Bloqueado'}</span>${c.teste?(exp(c)?' <span class="chip ex">Teste expirado</span>':' <span class="chip ts">Teste</span>'):''}${c.suspeito?' <span class="chip sus">⚠ Suspeito</span>':''}</span></div>
  <small>Usuário: ${esc(c.usuario||c.email||'')}</small>
+ ${c.teste?`<small>⏳ ${c.expiraEm?(exp(c)?'Teste terminou em '+fdt(c.expiraEm):'Restam '+rest(c.expiraEm)+' · termina '+fdt(c.expiraEm)):'Teste de '+tdesc(c.testeMs||0)+' · começa no 1º login'}</small>`:''}
  <small><span class="dot ${onl(c)?'on':''}"></span>${onl(c)?'Online agora':(c.visto?'Visto '+fdt(c.visto):'Último login: '+fdt(c.ultimoLogin))} · Trocas: ${c.trocas||0}</small>
  <small>Aparelho: ${c.sessao?esc((c.aparelhoInfo||'conectado')+' · '+(c.aparelho||'').slice(0,8)):'nenhum ativo'}</small>
- <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
+ <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}${c.teste?`<button class="bt sm" style="background:#25a244" onclick="vital('${c.id}')">Ativar vitalícia</button><button class="bt gh sm" onclick="estende('${c.id}')">Novo teste</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
 setInterval(()=>{if(list.length&&!$('#ad').hidden)draw()},60000);
 const get=id=>list.find(c=>c.id==id);
 async function up(id,p,msg){try{await db.collection('licencas').doc(id).update(p);toast(msg)}catch(e){toast(erro(e))}}
 const alt=id=>up(id,{ativo:!get(id).ativo},get(id).ativo?'Licença bloqueada':'Licença ativada');
+const vital=id=>up(id,{teste:false,expiraEm:null,testeMs:null,ativo:true},'Licença vitalícia ativada');
+function estende(id){const c=get(id);sheet(`<h3>Novo teste para ${esc(c.nome)}</h3><p>Reinicia o teste a partir de agora. Máximo de 7 dias.</p><div class="tr"><input id="en" inputmode="numeric" value="1"><select id="eu"><option value="h">horas</option><option value="d" selected>dias</option></select></div><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt" onclick="estende2('${id}')">Aplicar</button></div>`)}
+function estende2(id){const ms=tms($('#en').value,$('#eu').value);if(!ms){toast('Use de 1 hora até 7 dias');return}cl();up(id,{teste:true,testeMs:ms,expiraEm:Date.now()+ms,ativo:true},'Teste de '+tdesc(ms)+' iniciado agora')}
 const deslog=id=>up(id,{sessao:null},'Aparelho deslogado');
 const limpa=id=>up(id,{suspeito:false,trocasTs:[]},'Alerta limpo');
-function copiar(id){const c=get(id);acesso(c.nome,c.usuario||c.email,null)}
+function copiar(id){const c=get(id);acesso(c.nome,c.usuario||c.email,null,c.teste&&!c.expiraEm?c.testeMs:0)}
 function exc(id){const c=get(id);sheet(`<h3>Excluir licença</h3><p>Apaga a licença de <b>${esc(c.nome)}</b> daqui. O login continua existindo no Firebase Authentication: apague também lá (Authentication → Usuários), senão o cliente não consegue ser cadastrado de novo com o mesmo usuário.</p><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt rd" onclick="exc2('${id}')">Excluir</button></div>`)}
 async function exc2(id){cl();try{await db.collection('licencas').doc(id).delete();toast('Licença excluída')}catch(e){toast(erro(e))}}
 function gerar(){const a='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<8;i++)s+=a[Math.floor(Math.random()*a.length)];$('#ns').value=s}
 function wapp(){const n=($('#wn').value||'').replace(/\D/g,'');if(n.length<10){toast('Informe o WhatsApp do cliente com DDD');return}const t=encodeURIComponent(window._t);window.open('https://wa.me/'+(n.length<=11?'55'+n:n)+'?text='+t,'_blank','noopener')}
-function acesso(nome,u,senha){
- const t=`Olá, ${nome}! Seu acesso ao sistema de comandas:\n\nLink: ${APP_URL}\nUsuário: ${u}${senha?'\nSenha: '+senha:''}\n\nO acesso funciona em 1 aparelho por vez. Se entrar em outro aparelho, o anterior sai automaticamente.`;
+function acesso(nome,u,senha,ms){
+ const t=`Olá, ${nome}! Seu acesso ao sistema de comandas:\n\nLink: ${APP_URL}\nUsuário: ${u}${senha?'\nSenha: '+senha:''}${ms?`\n\n🎁 Teste grátis de ${tdesc(ms)}, começando no seu primeiro login.`:''}\n\nO acesso funciona em 1 aparelho por vez. Se entrar em outro aparelho, o anterior sai automaticamente.`;
  window._t=t;sheet(`<h3>Dados de acesso</h3>${senha?'':'<p>A senha só aparece na criação. Se precisar, redefina pelo Firebase.</p>'}<pre>${esc(t)}</pre><input id="wn" inputmode="tel" placeholder="WhatsApp do cliente (DDD + número)"><div class="row"><button class="bt" style="background:#25a244" onclick="wapp()">Enviar por WhatsApp</button><button class="bt gh" onclick="navigator.clipboard.writeText(window._t).then(()=>toast('Copiado'))">Copiar</button><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 async function criar(){
- const nome=$('#nn').value.trim(),u=$('#nu').value.trim().toLowerCase(),s=$('#ns').value;
+ const nome=$('#nn').value.trim(),u=$('#nu').value.trim().toLowerCase(),s=$('#ns').value,teste=$('#tp').value=='t',ms=teste?tms($('#tn').value,$('#tu').value):0;
  if(!nome||!u||s.length<6){toast('Preencha nome, usuário e senha (mín. 6)');return}
+ if(teste&&!ms){toast('Teste: use de 1 hora até 7 dias');return}
  const em=u.includes('@')?u:u+'@'+DOMINIO;
  try{
   const sec=firebase.apps.find(a=>a.name=='sec')||firebase.initializeApp(FB,'sec');
   const cr=await sec.auth().createUserWithEmailAndPassword(em,s);
-  await db.collection('licencas').doc(cr.user.uid).set({nome,usuario:u,email:em,ativo:true,criadoEm:Date.now(),sessao:null,aparelho:null,aparelhoInfo:'',ultimoLogin:null,trocas:0,trocasTs:[],suspeito:false});
+  await db.collection('licencas').doc(cr.user.uid).set({nome,usuario:u,email:em,ativo:true,criadoEm:Date.now(),sessao:null,aparelho:null,aparelhoInfo:'',ultimoLogin:null,trocas:0,trocasTs:[],suspeito:false,teste,testeMs:teste?ms:null,expiraEm:null});
   await sec.auth().signOut();
   $('#nn').value=$('#nu').value=$('#ns').value='';
-  acesso(nome,u,s)
+  acesso(nome,u,s,teste?ms:0)
  }catch(e){toast(erro(e))}
 }
 const APP_VER='1.1.0';

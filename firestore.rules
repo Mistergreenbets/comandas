@@ -21,7 +21,23 @@ service cloud.firestore {
         logado() && request.auth.uid == uid &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['sessao','aparelho','aparelhoInfo','ultimoLogin','trocas','trocasTs','suspeito','visto'])
+      ) || (
+        // início do teste no 1º login: o cliente só define expiraEm, limitado ao tempo que o admin escolheu
+        logado() && request.auth.uid == uid &&
+        resource.data.get('teste', false) == true &&
+        resource.data.get('expiraEm', null) == null &&
+        resource.data.get('testeMs', 0) > 0 &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['sessao','aparelho','aparelhoInfo','ultimoLogin','trocas','trocasTs','suspeito','visto','expiraEm']) &&
+        request.resource.data.expiraEm is number &&
+        request.resource.data.expiraEm >= request.time.toMillis() - 600000 &&
+        request.resource.data.expiraEm <= request.time.toMillis() + resource.data.testeMs + 600000
       );
+    }
+
+    // Cópia do cardápio de cada cliente: só o próprio dono lê e grava
+    match /licencas/{uid}/dados/{d} {
+      allow read, write: if logado() && request.auth.uid == uid;
     }
 
     // Configurações do app (suporte, versão e avisos): qualquer um lê, só o admin altera

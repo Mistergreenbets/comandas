@@ -222,9 +222,35 @@ async function load(){
  render()}
 let view='menu',cur=null,tab='a',ft=0;
 const save=async()=>{try{
- if(stor=='idb'){const d=await idb();d.transaction('k','readwrite').objectStore('k').put(db,'db')}
+ if(stor=='idb'){const d=await idb();await new Promise((ok,no)=>{const t=d.transaction('k','readwrite');t.objectStore('k').put(db,'db');t.oncomplete=ok;t.onerror=()=>no(t.error);t.onabort=()=>no(t.error||new Error('abort'))});d.close()}
  else if(stor=='ls')localStorage.setItem('cmd1',JSON.stringify(db));
- else toast('Sem armazenamento neste navegador: exporte o backup')}catch(e){stor='no';toast('Não foi possível salvar: exporte o backup');if(view=='home')render()}};
+ else toast('Sem armazenamento neste navegador: exporte o backup');
+ nuvAgenda()}catch(e){nuvAgenda();stor=stor=='idb'?'idb':'no';toast('Não foi possível salvar neste aparelho. O cardápio continua sendo enviado para a nuvem.')}};
+/* ---- cópia do cardápio na nuvem (Firestore, por licença) ---- */
+const nuv={ok:false,t:null,tm:null,last:'',started:false,busy:false};
+const nuvDados=()=>JSON.stringify({p:db.p,est:db.est||'',msg:db.msg||'',pct:db.pct,al:db.al});
+const nuvCol=()=>fdb.collection('licencas').doc(lic.uid).collection('dados');
+function nuvAgenda(){if(!nuv.ok)return;clearTimeout(nuv.tm);nuv.tm=setTimeout(()=>nuvPush(),15000)}
+async function nuvPush(man){
+ if(!nuv.ok||nuv.busy||!fdb||!lic||!lic.uid||!navigator.onLine){if(man)toast('Sem conexão com a nuvem');return}
+ const t=nuvDados();if(t==nuv.last&&!man)return;
+ nuv.busy=true;
+ try{const col=nuvCol(),old=await col.doc('meta').get(),on=old.exists?(old.data().n||0):0,N=300000,n=Math.max(1,Math.ceil(t.length/N)),b=fdb.batch();
+  for(let k=0;k<n;k++)b.set(col.doc('c'+k),{s:t.slice(k*N,(k+1)*N)});
+  for(let k=n;k<on;k++)b.delete(col.doc('c'+k));
+  b.set(col.doc('meta'),{n,t:Date.now(),qtd:db.p.length});
+  await b.commit();nuv.last=t;nuv.t=Date.now();if(man)toast('Cardápio salvo na nuvem')}
+ catch(e){if(man)toast('Não foi possível salvar na nuvem')}
+ nuv.busy=false}
+async function nuvPull(){
+ if(nuv.started||!fdb||!lic||!lic.uid||!navigator.onLine)return;nuv.started=true;
+ try{const col=nuvCol(),m=await col.doc('meta').get();
+  if(m.exists&&!db.p.length){let t='';for(let k=0;k<(m.data().n||0);k++){const d=await col.doc('c'+k).get();t+=d.data().s}
+   const o=JSON.parse(t);db.p=o.p||[];if(!db.est)db.est=o.est||'';if(!db.msg)db.msg=o.msg||'';await save();render();toast('Cardápio restaurado da nuvem: '+db.p.length+' produtos')}
+  if(m.exists)nuv.t=m.data().t;
+  nuv.ok=true;nuv.last=(m.exists&&!db.p.length)?'':nuv.last;nuvAgenda()}
+ catch(e){nuv.started=false}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='hidden'){clearTimeout(nuv.tm);nuvPush()}});
 const brl=n=>'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const num=s=>{s=String(s).replace(/[^\d.,]/g,'');if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');return parseFloat(s)||0};
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -300,7 +326,7 @@ function criaC(){const n=$('#f1').value.trim();if(!n){toast('Digite o nome da co
 const PINH=`<h2>Senha do garçom</h2><p>Digite a senha para abrir as opções.</p><input id="pn" type="password" inputmode="numeric" placeholder="Senha" autofocus><div class="fl"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt ro" onclick="pinOk()">Entrar</button></div>`;
 function menuG(){if(db.pin&&unl<Date.now()){pcb=menu;sheet(PINH);return}menu()}
 function tgIco(b){db.ico=!ico();save();b.classList.toggle('on',ico());if(view=='home'&&$('#gl'))$('#gl').innerHTML=gl()}
-function menu(){const ab=db.c.filter(c=>c.a),fe=db.c.filter(c=>!c.a);sheet(`<h2>Opções</h2><div class="sumb"><div class="r"><span>Em aberto (${ab.length})</span><b>${brl(ab.reduce((x,c)=>x+tot(c),0))}</b></div><div class="r"><span>Vendido (encerradas)</span><b>${brl(fe.reduce((x,c)=>x+tot(c),0))}</b></div></div><div class="r"><span>Ícones nas comandas (emojis)</span><button class="sw${ico()?' on':''}" onclick="tgIco(this)" aria-label="Ativar ou desativar ícones"><i></i></button></div><div class="r"><span>Aparência</span></div><div class="seg"><button data-t="c" class="${TEMA()=='c'?'on':''}" onclick="setTema('c')">☀️ Claro</button><button data-t="e" class="${TEMA()=='e'?'on':''}" onclick="setTema('e')">🌙 Escuro</button><button data-t="a" class="${TEMA()=='a'?'on':''}" onclick="setTema('a')">Auto</button></div><div class="r"><span>Alertar comanda aberta há (horas)</span><input class="sm" id="al" inputmode="decimal" value="${db.al==null?3:String(db.al).replace('.',',')}" oninput="db.al=num(this.value);save();if(view=='home'&&$('#gl'))$('#gl').innerHTML=gl()"></div><p>Amarelo no tempo definido e vermelho no dobro. Use 0 para desligar.</p> <input id="est" placeholder="Nome do estabelecimento (aparece ao encerrar)" value="${esc(db.est||'')}" oninput="db.est=this.value;save()" style="margin-top:6px"><input id="msg" placeholder="Mensagem de agradecimento (opcional)" value="${esc(db.msg||'')}" oninput="db.msg=this.value;save()" style="margin-top:8px"><p>Dados salvos ${stor=='idb'?'neste aparelho (IndexedDB)':stor=='ls'?'neste aparelho (localStorage)':'<b>somente enquanto a página estiver aberta</b>'}. Exporte um backup com frequência.</p><div class="fl"><button class="bt ro" onclick="expo()">Exportar backup</button><button class="bt gh" onclick="$('#fb').click()">Importar</button></div><input id="fb" type="file" accept=".json,application/json" hidden onchange="impo(this)">${LIC_ON&&lic?`<p>Licenciado para: <b>${esc(lic.nome||'')}</b><br>Terminal: ${esc(TERM)}</p><button class="bt gh" style="width:100%" onclick="sair()">Sair da conta</button>`:''}<div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
+function menu(){const ab=db.c.filter(c=>c.a),fe=db.c.filter(c=>!c.a);sheet(`<h2>Opções</h2><div class="sumb"><div class="r"><span>Em aberto (${ab.length})</span><b>${brl(ab.reduce((x,c)=>x+tot(c),0))}</b></div><div class="r"><span>Vendido (encerradas)</span><b>${brl(fe.reduce((x,c)=>x+tot(c),0))}</b></div></div><div class="r"><span>Ícones nas comandas (emojis)</span><button class="sw${ico()?' on':''}" onclick="tgIco(this)" aria-label="Ativar ou desativar ícones"><i></i></button></div><div class="r"><span>Aparência</span></div><div class="seg"><button data-t="c" class="${TEMA()=='c'?'on':''}" onclick="setTema('c')">☀️ Claro</button><button data-t="e" class="${TEMA()=='e'?'on':''}" onclick="setTema('e')">🌙 Escuro</button><button data-t="a" class="${TEMA()=='a'?'on':''}" onclick="setTema('a')">Auto</button></div><div class="r"><span>Alertar comanda aberta há (horas)</span><input class="sm" id="al" inputmode="decimal" value="${db.al==null?3:String(db.al).replace('.',',')}" oninput="db.al=num(this.value);save();if(view=='home'&&$('#gl'))$('#gl').innerHTML=gl()"></div><p>Amarelo no tempo definido e vermelho no dobro. Use 0 para desligar.</p> <input id="est" placeholder="Nome do estabelecimento (aparece ao encerrar)" value="${esc(db.est||'')}" oninput="db.est=this.value;save()" style="margin-top:6px"><input id="msg" placeholder="Mensagem de agradecimento (opcional)" value="${esc(db.msg||'')}" oninput="db.msg=this.value;save()" style="margin-top:8px"><p>☁️ Cardápio na nuvem: <b>${nuv.t?fdt(nuv.t):(LIC_ON&&lic?'aguardando':'indisponível')}</b></p><button class="bt gh" style="width:100%;margin-bottom:8px" onclick="nuvPush(1)">Salvar cardápio na nuvem agora</button><p>Dados salvos ${stor=='idb'?'neste aparelho (IndexedDB)':stor=='ls'?'neste aparelho (localStorage)':'<b>somente enquanto a página estiver aberta</b>'}. Exporte um backup com frequência.</p><div class="fl"><button class="bt ro" onclick="expo()">Exportar backup</button><button class="bt gh" onclick="$('#fb').click()">Importar</button></div><input id="fb" type="file" accept=".json,application/json" hidden onchange="impo(this)">${LIC_ON&&lic?`<p>Licenciado para: <b>${esc(lic.nome||'')}</b><br>Terminal: ${esc(TERM)}</p><button class="bt gh" style="width:100%" onclick="sair()">Sair da conta</button>`:''}<div class="fl"><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 function expo(){if(window.Android){Android.salvar('comandas-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(db));return}const b=new Blob([JSON.stringify(db)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='comandas-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove()}
 function impo(el){const f=el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.c||!d.p)throw 0;db=d;save();cl();render();toast('Backup restaurado')}catch(e){toast('Arquivo inválido')}};r.readAsText(f)}
 /* ---------- COMANDA ---------- */
@@ -442,7 +468,7 @@ function menuView(){
  const who=(lic&&lic.nome)||(db.est||'').trim()||'Garçom';
  const it=(f,a,b,ic,t,s)=>`<button class="mn" onclick="${f}"><span class="ci" style="background:linear-gradient(135deg,${a},${b})">${IM[ic]}</span><span class="tx"><b>${t}</b><small>${s}</small></span><span class="ch">›</span></button>`;
  return `<header class="mh"><button class="num" onclick="go('home')" aria-label="Comandas abertas">${nA}</button><button class="who" onclick="menuG()"><b>Salão <i>⌄</i></b><small>${esc(who)}</small></button><button class="tm" id="tmb" onclick="altTema()" aria-label="Modo claro ou escuro">${document.documentElement.classList.contains('dk')?'☀️':'🌙'}</button><button class="bell" onclick="avisos()" aria-label="Avisos">${IM.bell}${nb?`<em>${nb}</em>`:''}</button></header>
- <main>${stor=='no'?'<div class="alb">⚠ Sem armazenamento: exporte o backup em Ajustes</div>':''}${novaV?`<div class="nv"><div><b>Nova versão ${esc(novaV.versao)}</b><small>${esc(novaV.notas||'Atualização disponível')}</small></div><button class="bt" onclick="atualizarApp()">Atualizar</button></div>`:''}
+ <main>${lic&&lic.exp?`<div class="nv" style="background:linear-gradient(135deg,#f59f00,#ffc83d)"><div><b>⏳ Teste grátis</b><small>Restam ${restam(lic.exp)}</small></div><button class="bt" style="color:#b86e00" onclick="suporte()">Ativar vitalício</button></div>`:''}${stor=='no'?'<div class="alb">⚠ Sem armazenamento: exporte o backup em Ajustes</div>':''}${novaV?`<div class="nv"><div><b>Nova versão ${esc(novaV.versao)}</b><small>${esc(novaV.notas||'Atualização disponível')}</small></div><button class="bt" onclick="atualizarApp()">Atualizar</button></div>`:''}
  ${it("go('home')",'#3aa8ff','#8a4dff','ped','Pedido','Realizar um pedido')}
  ${it("go('conf')",'#ff9a3d','#ff4d2e','conf','Conferência','Conferir um pedido')}
  ${it("go('mapa')",'#ff3b5c','#ff1744','mapa','Mapa','Mapa de mesas')}
@@ -561,7 +587,11 @@ const delLic=()=>{try{localStorage.removeItem(LC)}catch(e){}};
 const lgMsg=t=>{const e=$('#lm');if(e)e.textContent=t||''};
 const showLg=m=>{$('#lg').hidden=false;$('#tm').textContent=TERM;lgMsg(m)};
 const hideLg=()=>{$('#lg').hidden=true;lgMsg('')};
-const chk=d=>!d?'Licença não encontrada. Fale com o suporte.':!d.ativo?'Licença inativa. Fale com o suporte.':d.sessao!==lic.sessao?'Sua conta foi acessada em outro aparelho.':'';
+const agoraSeg=()=>{const n=Date.now();let m=0;try{m=+localStorage.getItem('tmax')||0}catch(e){}const v=Math.max(n,m);try{localStorage.setItem('tmax',v)}catch(e){}return v};
+const MSG_TESTE='Seu período de teste terminou. Fale com o suporte para ativar a licença vitalícia.';
+const expirou=x=>!!x&&agoraSeg()>x;
+const restam=x=>{const m=Math.max(0,x-agoraSeg()),h=Math.floor(m/36e5),d=Math.floor(h/24);return d>=2?d+' dias':h>=1?h+'h '+Math.floor(m%36e5/6e4)+'min':Math.max(1,Math.ceil(m/6e4))+' min'};
+const chk=d=>!d?'Licença não encontrada. Fale com o suporte.':!d.ativo?'Licença inativa. Fale com o suporte.':expirou(d.expiraEm)?MSG_TESTE:d.sessao!==lic.sessao?'Sua conta foi acessada em outro aparelho.':'';
 const msgErro=e=>{if(e&&e.m)return e.m;const c=(e&&e.code)||'';
  if(/wrong-password|invalid-credential|user-not-found|invalid-email/.test(c))return'Usuário ou senha incorretos.';
  if(/too-many-requests/.test(c))return'Muitas tentativas. Aguarde alguns minutos.';
@@ -571,18 +601,19 @@ const msgErro=e=>{if(e&&e.m)return e.m;const c=(e&&e.code)||'';
 function forceOut(m){if(unsub){unsub();unsub=null}delLic();lic=null;try{auth&&auth.signOut()}catch(e){}showLg(m)}
 let hbT=null;
 function batida(id){if(hbT)clearInterval(hbT);const bt=()=>{if(document.visibilityState=='visible'&&navigator.onLine)fdb.collection('licencas').doc(id).update({visto:Date.now()}).catch(()=>{})};bt();hbT=setInterval(bt,150000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState=='visible')bt()})}
-function watch(id){if(unsub)unsub();batida(id);
+function watch(id){if(unsub)unsub();batida(id);nuvPull();
  unsub=fdb.collection('licencas').doc(id).onSnapshot(s=>{
   if(!lic)return;
   const m=chk(s.exists?s.data():null);
   if(m){forceOut(m);return}
-  if(!s.metadata.fromCache){lic.ver=Date.now();lic.nome=s.data().nome||lic.nome;setLic(lic)}
+  if(!s.metadata.fromCache){lic.ver=Date.now();lic.nome=s.data().nome||lic.nome;lic.exp=s.data().expiraEm||null;setLic(lic);if(view=='menu')render()}
  },()=>{})}
 function licInit(){
  if(!LIC_ON)return;
  const sp=document.querySelector('#splash img'),lg=$('#lgl');if(sp&&lg)lg.src=sp.src;
  const su=$('#ls');if(su&&LIC.suporte)su.textContent='Suporte: '+LIC.suporte;
  lic=getLic();
+ if(lic&&expirou(lic.exp)){delLic();lic=null;showLg(MSG_TESTE);return}
  const ok=lic&&Date.now()-lic.ver<=LIC.gracaDias*864e5;
  ok?hideLg():showLg(lic?'Conecte à internet para validar sua licença.':'');
  if(!window.firebase)return;
@@ -597,7 +628,7 @@ function licInit(){
     if(!lic)return;
     const m=chk(s.exists?s.data():null);
     if(m){forceOut(m);return}
-    lic.ver=Date.now();lic.nome=s.data().nome||lic.nome;setLic(lic);hideLg();watch(u.uid);checkV();
+    lic.ver=Date.now();lic.nome=s.data().nome||lic.nome;lic.exp=s.data().expiraEm||null;setLic(lic);hideLg();watch(u.uid);checkV();
    }).catch(()=>{});
   });
  }catch(e){}
@@ -614,6 +645,7 @@ async function lgEntrar(){
   if(!sn.exists){await auth.signOut();throw{m:'Licença não encontrada. Fale com o suporte.'}}
   const d=sn.data();
   if(!d.ativo){await auth.signOut();throw{m:'Licença inativa. Fale com o suporte.'}}
+  if(expirou(d.expiraEm)){await auth.signOut();throw{m:MSG_TESTE}}
   const agora=Date.now(),troca=!!d.sessao&&d.aparelho!==TERM;
   let ts=(d.trocasTs||[]).filter(t=>agora-t<864e5);
   if(troca)ts.push(agora);
@@ -621,13 +653,15 @@ async function lgEntrar(){
    await ref.update({suspeito:true,trocasTs:ts}).catch(()=>{});
    await auth.signOut();throw{m:'Muitas trocas de aparelho em 24h. Fale com o suporte.'}}
   const sid=uid()+uid();
-  await ref.update({sessao:sid,aparelho:TERM,aparelhoInfo:((navigator.userAgent.match(/\(([^)]+)\)/)||[])[1]||'').slice(0,80),ultimoLogin:agora,trocas:(d.trocas||0)+(troca?1:0),trocasTs:ts.slice(-10)});
-  lic={uid:id,nome:d.nome||u,sessao:sid,ver:agora};setLic(lic);
+  const ini=d.teste&&!d.expiraEm&&d.testeMs?agora+d.testeMs:null;
+  await ref.update({...(ini?{expiraEm:ini}:{}),sessao:sid,aparelho:TERM,aparelhoInfo:((navigator.userAgent.match(/\(([^)]+)\)/)||[])[1]||'').slice(0,80),ultimoLogin:agora,trocas:(d.trocas||0)+(troca?1:0),trocasTs:ts.slice(-10)});
+  lic={uid:id,nome:d.nome||u,sessao:sid,ver:agora,exp:ini||d.expiraEm||null};setLic(lic);
   $('#lp').value='';watch(id);hideLg();checkV();
  }catch(e){lgMsg(msgErro(e))}
  finally{b.disabled=false;b.textContent='Entrar'}
 }
 function sair(){cl();forceOut('')}
+setInterval(()=>{if(lic&&lic.exp&&expirou(lic.exp))forceOut(MSG_TESTE);else if(lic&&lic.exp&&view=='menu')render()},60000);
 licInit();
 load();
 </script><script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script><script>setTimeout(function(){var e=document.getElementById('splash');if(e){e.classList.add('out');setTimeout(function(){e.remove()},600)}},3500)</script></body></html>
