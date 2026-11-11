@@ -69,7 +69,7 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
  <div id="p2" class="pg" hidden>
   <div class="box"><h3>Suporte (WhatsApp)</h3><p>Número com DDD (o 55 é adicionado sozinho). O botão "Falar com o suporte" do app usa este número.</p>
    <input id="cs" inputmode="tel" placeholder="Ex.: 85 99999-9999"></div>
-  <div class="box"><h3>Aviso de nova versão</h3><p>Versão atual do app instalado: <b id="vapp">1.1.0</b>. Ao publicar uma versão maior, aparece o banner "Atualizar" nos aparelhos.</p>
+  <div class="box"><h3>Aviso de nova versão</h3><p>Versão atual do app instalado: <b id="vapp">1.2.0</b>. Ao publicar uma versão maior, aparece o banner "Atualizar" nos aparelhos.</p>
    <input id="cv" placeholder="Versão publicada (ex.: 1.2.0)"><textarea id="cn" placeholder="Novidades desta versão"></textarea></div>
   <button class="bt" style="width:100%" onclick="salvaCfg()">Salvar configurações</button>
  </div>
@@ -181,7 +181,7 @@ async function criar(){
   acesso(nome,u,s,teste?ms:0)
  }catch(e){toast(erro(e))}
 }
-const APP_VER='1.1.0';
+const APP_VER='1.2.0';
 function aba(n){[1,2,3].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.toggle('on',i==n)})}
 function escutaCfg(){if(unc)unc();
  unc=db.collection('config').doc('app').onSnapshot(s=>{CFG=s.exists?s.data():{};
