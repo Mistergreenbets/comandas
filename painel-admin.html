@@ -71,6 +71,8 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
    <input id="cs" inputmode="tel" placeholder="Ex.: 85 99999-9999"></div>
   <div class="box"><h3>Aviso de nova versão</h3><p>Versão atual do app instalado: <b id="vapp">1.2.0</b>. Ao publicar uma versão maior, aparece o banner "Atualizar" nos aparelhos.</p>
    <input id="cv" placeholder="Versão publicada (ex.: 1.2.0)"><textarea id="cn" placeholder="Novidades desta versão"></textarea></div>
+  <div class="box"><h3>Teste grátis (6 horas)</h3><p>Quando ligado, qualquer pessoa pode criar o próprio teste de 6 horas na tela de login. Desligue se notar abuso.</p>
+   <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="ct" style="width:auto;margin:0"> Permitir novos testes automáticos</label></div>
   <button class="bt" style="width:100%" onclick="salvaCfg()">Salvar configurações</button>
  </div>
  <div id="p3" class="pg" hidden>
@@ -137,7 +139,7 @@ function tms(n,u){n=parseInt(n,10);if(!n||n<1)return 0;const ms=n*(u=='d'?864e5:
 function tdesc(ms){const h=Math.round(ms/36e5);return h%24==0&&h>=24?(h/24)+(h==24?' dia':' dias'):h+(h==1?' hora':' horas')}
 function rest(x){const m=x-Date.now();if(m<=0)return'expirado';const h=Math.floor(m/36e5),d=Math.floor(h/24);return d>=1?d+'d '+(h%24)+'h':h>=1?h+'h '+Math.floor(m%36e5/6e4)+'min':Math.max(1,Math.ceil(m/6e4))+' min'}
 const exp=c=>c.teste&&c.expiraEm&&Date.now()>c.expiraEm;
-const onl=c=>c.sessao&&c.visto&&Date.now()-c.visto<300000;
+const onl=c=>c.sessao&&c.visto&&Date.now()-c.visto<900000;
 function draw(){
  const k=($('#q').value||'').toLowerCase().trim(),m=MODO();
  $('#vl').classList.toggle('on',m=='l');$('#vg').classList.toggle('on',m=='g');
@@ -145,7 +147,7 @@ function draw(){
  const l=list.filter(c=>!k||(c.nome+' '+(c.usuario||'')).toLowerCase().includes(k));
  $('#ls').className=m=='g'?'grid':'';
  $('#ls').innerHTML=l.length?l.map(c=>`<div class="cl"><div class="top"><h3>${esc(c.nome)}</h3><span><span class="chip ${c.ativo?'on':'off'}">${c.ativo?'Ativo':'Bloqueado'}</span>${c.teste?(exp(c)?' <span class="chip ex">Teste expirado</span>':' <span class="chip ts">Teste</span>'):''}${c.suspeito?' <span class="chip sus">⚠ Suspeito</span>':''}</span></div>
- <small>Usuário: ${esc(c.usuario||c.email||'')}</small>
+ <small>Usuário: ${esc(c.usuario||c.email||'')}${c.autoTeste?' · teste automático':''}${c.whatsapp?` · <a href="https://wa.me/55${esc(c.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>`:''}</small>
  ${c.teste?`<small>⏳ ${c.expiraEm?(exp(c)?'Teste terminou em '+fdt(c.expiraEm):'Restam '+rest(c.expiraEm)+' · termina '+fdt(c.expiraEm)):'Teste de '+tdesc(c.testeMs||0)+' · começa no 1º login'}</small>`:''}
  <small><span class="dot ${onl(c)?'on':''}"></span>${onl(c)?'Online agora':(c.visto?'Visto '+fdt(c.visto):'Último login: '+fdt(c.ultimoLogin))} · Trocas: ${c.trocas||0}</small>
  <small>Aparelho: ${c.sessao?esc((c.aparelhoInfo||'conectado')+' · '+(c.aparelho||'').slice(0,8)):'nenhum ativo'}</small>
@@ -186,11 +188,11 @@ function aba(n){[1,2,3].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.to
 function escutaCfg(){if(unc)unc();
  unc=db.collection('config').doc('app').onSnapshot(s=>{CFG=s.exists?s.data():{};
   const f=(id,v)=>{const e=$(id);if(e&&document.activeElement!==e)e.value=v||''};
-  f('#cs',CFG.suporte);f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
+  f('#cs',CFG.suporte);if($('#ct')&&document.activeElement!==$('#ct'))$('#ct').checked=CFG.testeAberto!==false;f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
 async function salvaCfg(){
  const suporte=$('#cs').value.trim(),versao=$('#cv').value.trim(),notas=$('#cn').value.trim();
  if(versao&&!/^\d+(\.\d+){0,2}$/.test(versao)){toast('Versão no formato 1.2.0');return}
- try{await db.collection('config').doc('app').set({suporte,versao,notas,atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
+ try{await db.collection('config').doc('app').set({suporte,versao,notas,testeAberto:$('#ct').checked,atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
 async function novoAviso(){
  const t=$('#at').value.trim(),x=$('#ax').value.trim();if(!t){toast('Informe o título');return}
  const a=(CFG.avisos||[]).concat([{id:Date.now().toString(36),t,x,ts:Date.now()}]).slice(-20);
