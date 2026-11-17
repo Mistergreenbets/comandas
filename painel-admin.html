@@ -71,6 +71,8 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
    <input id="cs" inputmode="tel" placeholder="Ex.: 85 99999-9999"></div>
   <div class="box"><h3>Aviso de nova versão</h3><p>Versão atual do app instalado: <b id="vapp">1.2.0</b>. Ao publicar uma versão maior, aparece o banner "Atualizar" nos aparelhos.</p>
    <input id="cv" placeholder="Versão publicada (ex.: 1.2.0)"><textarea id="cn" placeholder="Novidades desta versão"></textarea></div>
+  <div class="box"><h3>Pagamento PIX</h3><p>Usado na tela "Ativar com PIX" do app. Chave: e-mail, CPF/CNPJ, telefone (+55...) ou aleatória. Se o valor ficar vazio, o cliente digita no banco.</p>
+   <input id="cpk" placeholder="Chave PIX (ex.: lilian.martinsrei@gmail.com)"><input id="cpv" inputmode="decimal" placeholder="Valor da licença (ex.: 49,90)"><input id="cpn" placeholder="Nome do recebedor (ex.: SS BUILDER)"><input id="cpc" placeholder="Cidade (ex.: FORTALEZA)"></div>
   <div class="box"><h3>Teste grátis (6 horas)</h3><p>Quando ligado, qualquer pessoa pode criar o próprio teste de 6 horas na tela de login. Desligue se notar abuso.</p>
    <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="ct" style="width:auto;margin:0"> Permitir novos testes automáticos</label></div>
   <button class="bt" style="width:100%" onclick="salvaCfg()">Salvar configurações</button>
@@ -188,11 +190,11 @@ function aba(n){[1,2,3].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.to
 function escutaCfg(){if(unc)unc();
  unc=db.collection('config').doc('app').onSnapshot(s=>{CFG=s.exists?s.data():{};
   const f=(id,v)=>{const e=$(id);if(e&&document.activeElement!==e)e.value=v||''};
-  f('#cs',CFG.suporte);if($('#ct')&&document.activeElement!==$('#ct'))$('#ct').checked=CFG.testeAberto!==false;f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
+  f('#cs',CFG.suporte);f('#cpk',CFG.pixChave);f('#cpv',CFG.pixValor);f('#cpn',CFG.pixNome);f('#cpc',CFG.pixCidade);if($('#ct')&&document.activeElement!==$('#ct'))$('#ct').checked=CFG.testeAberto!==false;f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
 async function salvaCfg(){
  const suporte=$('#cs').value.trim(),versao=$('#cv').value.trim(),notas=$('#cn').value.trim();
  if(versao&&!/^\d+(\.\d+){0,2}$/.test(versao)){toast('Versão no formato 1.2.0');return}
- try{await db.collection('config').doc('app').set({suporte,versao,notas,testeAberto:$('#ct').checked,atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
+ try{await db.collection('config').doc('app').set({suporte,versao,notas,testeAberto:$('#ct').checked,pixChave:$('#cpk').value.trim(),pixValor:$('#cpv').value.trim(),pixNome:$('#cpn').value.trim(),pixCidade:$('#cpc').value.trim(),atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
 async function novoAviso(){
  const t=$('#at').value.trim(),x=$('#ax').value.trim();if(!t){toast('Informe o título');return}
  const a=(CFG.avisos||[]).concat([{id:Date.now().toString(36),t,x,ts:Date.now()}]).slice(-20);
