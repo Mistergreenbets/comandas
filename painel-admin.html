@@ -65,7 +65,12 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
 <div id="ad" hidden>
 <header><h1>Painel Comandas</h1><button class="bt gh sm" onclick="sair()">Sair</button></header>
 <main>
- <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Licenças</button><button id="t2" onclick="aba(2)">Configurações</button><button id="t3" onclick="aba(3)">Avisos</button></div>
+ <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Licenças</button><button id="t2" onclick="aba(2)">Configurações</button><button id="t3" onclick="aba(3)">Avisos</button><button id="t4" onclick="aba(4)">Indicações</button></div>
+ <div id="p4" class="pg" hidden>
+  <div id="im" class="box"></div>
+  <select id="if" onchange="indF=this.value;drawInd()" style="width:100%;margin-bottom:10px"><option value="todas">Todas</option><option value="teste">Em teste</option><option value="carencia">Em carência</option><option value="liberada">Liberadas p/ repasse</option><option value="paga">Pagas</option><option value="cancelada">Canceladas</option></select>
+  <div id="il"></div>
+ </div>
  <div id="p2" class="pg" hidden>
   <div class="box"><h3>Suporte (WhatsApp)</h3><p>Número com DDD (o 55 é adicionado sozinho). O botão "Falar com o suporte" do app usa este número.</p>
    <input id="cs" inputmode="tel" placeholder="Ex.: 85 99999-9999"></div>
@@ -73,6 +78,10 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
    <input id="cv" placeholder="Versão publicada (ex.: 1.2.0)"><textarea id="cn" placeholder="Novidades desta versão"></textarea></div>
   <div class="box"><h3>Pagamento PIX</h3><p>Usado na tela "Ativar com PIX" do app. Chave: e-mail, CPF/CNPJ, telefone (+55...) ou aleatória. Se o valor ficar vazio, o cliente digita no banco.</p>
    <input id="cpk" placeholder="Chave PIX (ex.: lilian.martinsrei@gmail.com)"><input id="cpv" inputmode="decimal" placeholder="Valor da licença (ex.: 49,90)"><input id="cpn" placeholder="Nome do recebedor (ex.: SS BUILDER)"><input id="cpc" placeholder="Cidade (ex.: FORTALEZA)"></div>
+  <div class="box"><h3>Programa de indicação</h3><p>Comissão paga ao garçom que indicou, depois que o indicado pagar e passar a carência.</p>
+   <label style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><input type="checkbox" id="ra" style="width:auto;margin:0"> Programa ativo</label>
+   <div class="tr"><select id="rt"><option value="pct">Percentual (%)</option><option value="fixo">Valor fixo (R$)</option></select><input id="rv" inputmode="decimal" placeholder="Valor (ex.: 20 ou 5,00)"></div>
+   <input id="rd" inputmode="numeric" placeholder="Carência em dias (padrão 7)" style="margin-top:8px"></div>
   <div class="box"><h3>Teste grátis (6 horas)</h3><p>Quando ligado, qualquer pessoa pode criar o próprio teste de 6 horas na tela de login. Desligue se notar abuso.</p>
    <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="ct" style="width:auto;margin:0"> Permitir novos testes automáticos</label></div>
   <button class="bt" style="width:100%" onclick="salvaCfg()">Salvar configurações</button>
@@ -133,7 +142,7 @@ async function entrar(){const b=$('#ab');b.disabled=true;lm('');
  try{await auth.signInWithEmailAndPassword($('#au').value.trim(),$('#ap').value)}catch(e){lm(erro(e))}b.disabled=false}
 const sair=()=>auth.signOut();
 function escutar(){if(unsub)unsub();
- unsub=db.collection('licencas').orderBy('criadoEm','desc').onSnapshot(s=>{list=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>toast(erro(e)))}
+ unsub=db.collection('licencas').orderBy('criadoEm','desc').onSnapshot(s=>{list=s.docs.map(d=>({id:d.id,...d.data()}));draw();drawInd()},e=>toast(erro(e)));escutaInd()}
 const MODO=()=>{try{return localStorage.getItem('vmodo')||'l'}catch(e){return'l'}};
 function modo(m){try{localStorage.setItem('vmodo',m)}catch(e){}draw()}
 function tpMud(){const t=$('#tp').value=='t';$('#tbx').hidden=!t;$('#tdica').hidden=!t}
@@ -156,9 +165,9 @@ function draw(){
  <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}${c.teste?`<button class="bt sm" style="background:#25a244" onclick="vital('${c.id}')">Ativar vitalícia</button><button class="bt gh sm" onclick="estende('${c.id}')">Novo teste</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
 setInterval(()=>{if(list.length&&!$('#ad').hidden)draw()},60000);
 const get=id=>list.find(c=>c.id==id);
-async function up(id,p,msg){try{await db.collection('licencas').doc(id).update(p);toast(msg)}catch(e){toast(erro(e))}}
+async function up(id,p,msg){try{await db.collection('licencas').doc(id).update(p);toast(msg);return true}catch(e){toast(erro(e));return false}}
 const alt=id=>up(id,{ativo:!get(id).ativo},get(id).ativo?'Licença bloqueada':'Licença ativada');
-const vital=id=>up(id,{teste:false,expiraEm:null,testeMs:null,ativo:true},'Licença vitalícia ativada');
+const vital=async id=>{const ok=await up(id,{teste:false,expiraEm:null,testeMs:null,ativo:true},'Licença vitalícia ativada');const i=IND.find(x=>x.id==id);if(ok&&i&&i.status=='teste'&&CFG.refAtivo!==false)regPagAbre(id)};
 function estende(id){const c=get(id);sheet(`<h3>Novo teste para ${esc(c.nome)}</h3><p>Reinicia o teste a partir de agora. Máximo de 7 dias.</p><div class="tr"><input id="en" inputmode="numeric" value="1"><select id="eu"><option value="h">horas</option><option value="d" selected>dias</option></select></div><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt" onclick="estende2('${id}')">Aplicar</button></div>`)}
 function estende2(id){const ms=tms($('#en').value,$('#eu').value);if(!ms){toast('Use de 1 hora até 7 dias');return}cl();up(id,{teste:true,testeMs:ms,expiraEm:Date.now()+ms,ativo:true},'Teste de '+tdesc(ms)+' iniciado agora')}
 const deslog=id=>up(id,{sessao:null},'Aparelho deslogado');
@@ -185,16 +194,61 @@ async function criar(){
   acesso(nome,u,s,teste?ms:0)
  }catch(e){toast(erro(e))}
 }
-const APP_VER='1.2.0';
-function aba(n){[1,2,3].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.toggle('on',i==n)})}
+
+let IND=[],unsubI=null,indF='todas';
+const brl=v=>'R$ '+(Number(v)||0).toFixed(2).replace('.',',');
+const dmy=t=>t?new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'-';
+const indSt=i=>i.status=='paga'?'paga':i.status=='cancelada'?'cancelada':i.status=='pago'?(Date.now()>=(i.liberaEm||0)?'liberada':'carencia'):'teste';
+const licPaga=c=>!!c&&!c.teste&&c.ativo!==false;
+const pxTLV=(i,v)=>i+String(v.length).padStart(2,'0')+v;
+function pxCRC(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
+function pxChave(c){const t=c.pixTipo,k=String(c.pixChave||'').trim(),d=k.replace(/\D/g,'');return t=='cpf'?d:t=='tel'?'+'+(d.length<=11?'55'+d:d):t=='email'?k.toLowerCase():k}
+function pxPayload(c,valor){const sem=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 ]/g,'').toUpperCase().trim();
+ const p=pxTLV('00','01')+pxTLV('26',pxTLV('00','br.gov.bcb.pix')+pxTLV('01',pxChave(c)))+pxTLV('52','0000')+pxTLV('53','986')+(valor>0?pxTLV('54',valor.toFixed(2)):'')+pxTLV('58','BR')+pxTLV('59',sem(c.pixNome||'RECEBEDOR').slice(0,25)||'RECEBEDOR')+pxTLV('60',sem(CFG.pixCidade||'BRASIL').slice(0,15)||'BRASIL')+pxTLV('62',pxTLV('05','***'))+'6304';return p+pxCRC(p)}
+function copia(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();if(!ok&&navigator.clipboard)navigator.clipboard.writeText(t);toast('Copiado')}
+function escutaInd(){if(unsubI)unsubI();unsubI=db.collection('indicacoes').orderBy('criadoEm','desc').onSnapshot(s=>{IND=s.docs.map(d=>({id:d.id,...d.data()}));drawInd()},e=>toast(erro(e)))}
+function indProb(i){const a=get(i.indicadorUid),b=get(i.indicadoUid),r=[];
+ if(!a)r.push('indicador não encontrado');else{if(!licPaga(a))r.push('indicador SEM licença paga');if(!a.pixChave)r.push('indicador sem chave PIX');if(a.aparelho&&b&&a.aparelho===b.aparelho)r.push('MESMO aparelho do indicado (suspeita de autoindicação)')}
+ return r}
+function drawInd(){const el=$('#il');if(!el)return;
+ const pg=IND.filter(i=>i.status=='pago'||i.status=='paga'),tot=IND.length,conv=tot?Math.round(pg.length*100/tot):0;
+ const soma=f=>IND.filter(i=>f(indSt(i))).reduce((x,i)=>x+(i.comissao||0),0);
+ const rk={};IND.forEach(i=>{const r=rk[i.indicadorUid]=rk[i.indicadorUid]||{n:0,p:0};r.n++;if(i.status=='pago'||i.status=='paga')r.p++});
+ const og={};IND.forEach(i=>{const o=i.origem||'direto',r=og[o]=og[o]||{n:0,p:0};r.n++;if(i.status=='pago'||i.status=='paga')r.p++});
+ const lin=(a,b)=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0"><span>${a}</span><b>${b}</b></div>`;
+ $('#im').innerHTML=`<h3>Medidor de indicações</h3>${lin('Indicações',tot)}${lin('Pagaram (conversão)',pg.length+' · '+conv+'%')}${lin('Em carência',brl(soma(s=>s=='carencia')))}${lin('Liberadas para repasse',brl(soma(s=>s=='liberada')))}${lin('Já repassado',brl(soma(s=>s=='paga')))}
+ <h3 style="margin-top:12px">Quem mais indica</h3>${Object.entries(rk).sort((a,b)=>b[1].p-a[1].p||b[1].n-a[1].n).slice(0,5).map(([u,r])=>lin(esc((get(u)||{}).nome||'—'),r.p+' pagaram de '+r.n)).join('')||'<p>Sem dados.</p>'}
+ <h3 style="margin-top:12px">Origem dos links</h3>${Object.entries(og).sort((a,b)=>b[1].n-a[1].n).map(([o,r])=>lin(esc(o),r.p+' de '+r.n)).join('')||'<p>Sem dados.</p>'}`;
+ const L=IND.filter(i=>indF=='todas'||indSt(i)==indF);
+ el.innerHTML=L.map(i=>{const a=get(i.indicadorUid)||{},b=get(i.indicadoUid)||{},s=indSt(i),pr=indProb(i);
+  const rot={teste:'⏳ Em teste',carencia:'🕒 Carência até '+dmy(i.liberaEm),liberada:'💰 Liberada p/ repasse',paga:'✅ Paga em '+dmy(i.pagaEm),cancelada:'🚫 Cancelada'}[s];
+  return `<div class="cl"><b>${esc(a.nome||'Indicador')}</b> indicou <b>${esc(b.nome||i.indicadoNome||'')}</b><br><small>${rot} · código ${esc(i.codigo||'')} · origem ${esc(i.origem||'direto')} · ${dmy(i.criadoEm)}</small>
+  ${i.comissao?`<p>Venda ${brl(i.valorVenda)} · Comissão <b>${brl(i.comissao)}</b> (${i.refTipo=='fixo'?'fixo':i.refValor+'%'})</p>`:''}
+  ${a.pixChave?`<p><small>PIX (${esc(a.pixTipo)}): ${esc(a.pixChave)} · ${esc(a.pixNome||'')}</small></p>`:''}
+  ${pr.length&&s!='paga'&&s!='cancelada'?`<p style="color:#c0392b"><small>⚠ ${pr.map(esc).join(' · ')}</small></p>`:''}
+  <div class="row">${s=='teste'?`<button class="bt sm" onclick="regPagAbre('${i.id}')">Registrar pagamento</button>`:''}${s=='liberada'?`<button class="bt gh sm" onclick="indCopia('${i.id}')">Copiar PIX da comissão</button><button class="bt sm" onclick="marcaPaga('${i.id}')">Marcar como paga</button>`:''}${s=='carencia'?`<button class="bt gh sm" onclick="indCopia('${i.id}')">Copiar PIX</button>`:''}${s!='paga'&&s!='cancelada'?`<button class="bt gh sm" onclick="cancelaInd('${i.id}')">Cancelar</button>`:''}</div></div>`}).join('')||'<div class="box"><p>Nenhuma indicação neste filtro.</p></div>'}
+function regPagAbre(id){const i=IND.find(x=>x.id==id);if(!i)return;const b=get(i.indicadoUid)||{};
+ sheet(`<h3>Pagamento de ${esc(b.nome||i.indicadoNome||'')}</h3><p>Valor recebido do indicado (R$). A comissão é calculada pela configuração atual e a carência começa agora.</p><input id="rvv" inputmode="decimal" value="${esc(CFG.pixValor||'')}" placeholder="Ex.: 30,00"><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt" onclick="regPag('${id}')">Registrar</button></div>`)}
+async function regPag(id){const venda=parseFloat(String($('#rvv').value).replace(',','.'));if(!(venda>0)){toast('Valor inválido');return}
+ const tipo=CFG.refTipo=='fixo'?'fixo':'pct',val=parseFloat(String(CFG.refValor||'0').replace(',','.'))||0,car=parseInt(CFG.refCarencia)>=0?parseInt(CFG.refCarencia):7,agora=Date.now();
+ const comissao=Math.round((tipo=='pct'?venda*val/100:val)*100)/100;
+ try{await db.collection('indicacoes').doc(id).update({status:'pago',pagoEm:agora,valorVenda:venda,refTipo:tipo,refValor:val,comissao,liberaEm:agora+car*864e5});cl();toast('Comissão de '+brl(comissao)+' criada · libera em '+car+' dias')}catch(e){toast(erro(e))}}
+function indCopia(id){const i=IND.find(x=>x.id==id),a=get(i.indicadorUid);if(!a||!a.pixChave){toast('Indicador sem chave PIX');return}copia(pxPayload(a,i.comissao||0))}
+async function marcaPaga(id){const i=IND.find(x=>x.id==id),pr=indProb(i);
+ if(pr.length){toast('Não é possível pagar: '+pr[0]);return}
+ if(!confirm('Confirma que você já repassou '+brl(i.comissao)+' ao indicador?'))return;
+ try{await db.collection('indicacoes').doc(id).update({status:'paga',pagaEm:Date.now()});toast('Marcada como paga')}catch(e){toast(erro(e))}}
+async function cancelaInd(id){if(!confirm('Cancelar esta indicação/comissão?'))return;try{await db.collection('indicacoes').doc(id).update({status:'cancelada',canceladaEm:Date.now()});toast('Cancelada')}catch(e){toast(erro(e))}}
+const APP_VER='1.3.0';
+function aba(n){[1,2,3,4].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.toggle('on',i==n)})}
 function escutaCfg(){if(unc)unc();
  unc=db.collection('config').doc('app').onSnapshot(s=>{CFG=s.exists?s.data():{};
   const f=(id,v)=>{const e=$(id);if(e&&document.activeElement!==e)e.value=v||''};
-  f('#cs',CFG.suporte);f('#cpk',CFG.pixChave);f('#cpv',CFG.pixValor);f('#cpn',CFG.pixNome);f('#cpc',CFG.pixCidade);if($('#ct')&&document.activeElement!==$('#ct'))$('#ct').checked=CFG.testeAberto!==false;f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
+  f('#cs',CFG.suporte);f('#cpk',CFG.pixChave);f('#rv',CFG.refValor);f('#rd',CFG.refCarencia==null?'7':CFG.refCarencia);if($('#rt')&&document.activeElement!==$('#rt'))$('#rt').value=CFG.refTipo||'pct';if($('#ra')&&document.activeElement!==$('#ra'))$('#ra').checked=CFG.refAtivo!==false;f('#cpv',CFG.pixValor);f('#cpn',CFG.pixNome);f('#cpc',CFG.pixCidade);if($('#ct')&&document.activeElement!==$('#ct'))$('#ct').checked=CFG.testeAberto!==false;f('#cv',CFG.versao);f('#cn',CFG.notas);$('#vapp').textContent=APP_VER;drawAv()},e=>toast(erro(e)))}
 async function salvaCfg(){
  const suporte=$('#cs').value.trim(),versao=$('#cv').value.trim(),notas=$('#cn').value.trim();
  if(versao&&!/^\d+(\.\d+){0,2}$/.test(versao)){toast('Versão no formato 1.2.0');return}
- try{await db.collection('config').doc('app').set({suporte,versao,notas,testeAberto:$('#ct').checked,pixChave:$('#cpk').value.trim(),pixValor:$('#cpv').value.trim(),pixNome:$('#cpn').value.trim(),pixCidade:$('#cpc').value.trim(),atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
+ try{await db.collection('config').doc('app').set({suporte,versao,notas,testeAberto:$('#ct').checked,pixChave:$('#cpk').value.trim(),pixValor:$('#cpv').value.trim(),pixNome:$('#cpn').value.trim(),pixCidade:$('#cpc').value.trim(),refAtivo:$('#ra').checked,refTipo:$('#rt').value,refValor:$('#rv').value.trim(),refCarencia:parseInt($('#rd').value)>=0?parseInt($('#rd').value):7,atualizadoEm:Date.now()},{merge:true});toast('Configurações salvas')}catch(e){toast(erro(e))}}
 async function novoAviso(){
  const t=$('#at').value.trim(),x=$('#ax').value.trim();if(!t){toast('Informe o título');return}
  const a=(CFG.avisos||[]).concat([{id:Date.now().toString(36),t,x,ts:Date.now()}]).slice(-20);
