@@ -29,8 +29,8 @@ button{font:inherit;cursor:pointer}
 header .bt.gh{background:#ffffff33;color:#fff;border:0}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .row>*{flex:1}
-.tabs{display:flex;gap:8px;margin-bottom:12px}
-.tabs button{flex:1;padding:11px;border-radius:999px;border:0;background:#fff;color:var(--ro);font-weight:600;box-shadow:0 2px 8px #1f2a4410}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{flex:1 1 auto;white-space:nowrap;font-size:14px;padding:10px 12px;border-radius:999px;border:0;background:#fff;color:var(--ro);font-weight:600;box-shadow:0 2px 8px #1f2a4410}
 .tabs .on{background:var(--pr);color:#fff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.grid .cl{margin:0}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#c3c9d6;margin-right:6px}.dot.on{background:#3fa535;box-shadow:0 0 0 3px #3fa53533}
@@ -226,7 +226,7 @@ function drawInd(){const el=$('#il');if(!el)return;
   ${i.comissao?`<p>Venda ${brl(i.valorVenda)} · Comissão <b>${brl(i.comissao)}</b> (${i.refTipo=='fixo'?'fixo':i.refValor+'%'})</p>`:''}
   ${a.pixChave?`<p><small>PIX (${esc(a.pixTipo)}): ${esc(a.pixChave)} · ${esc(a.pixNome||'')}</small></p>`:''}
   ${pr.length&&s!='paga'&&s!='cancelada'?`<p style="color:#c0392b"><small>⚠ ${pr.map(esc).join(' · ')}</small></p>`:''}
-  <div class="row">${s=='teste'?`<button class="bt sm" onclick="regPagAbre('${i.id}')">Registrar pagamento</button>`:''}${s=='liberada'?`<button class="bt gh sm" onclick="indCopia('${i.id}')">Copiar PIX da comissão</button><button class="bt sm" onclick="marcaPaga('${i.id}')">Marcar como paga</button>`:''}${s=='carencia'?`<button class="bt gh sm" onclick="indCopia('${i.id}')">Copiar PIX</button>`:''}${s!='paga'&&s!='cancelada'?`<button class="bt gh sm" onclick="cancelaInd('${i.id}')">Cancelar</button>`:''}</div></div>`}).join('')||'<div class="box"><p>Nenhuma indicação neste filtro.</p></div>'}
+  <div class="row">${s=='teste'?`<button class="bt sm" onclick="regPagAbre('${i.id}')">Registrar pagamento</button>`:''}${s=='liberada'?`<button class="bt gh sm" onclick="indCopia('${i.id}')">Copiar PIX da comissão</button><button class="bt sm" onclick="marcaPaga('${i.id}')">Marcar como paga</button>`:''}${s=='carencia'?`<button class="bt gh sm" onclick="indCopia('${i.id}')">Copiar PIX</button><button class="bt sm" onclick="liberaAgora('${i.id}')">Liberar agora</button>`:''}${s!='paga'&&s!='cancelada'?`<button class="bt gh sm" onclick="cancelaInd('${i.id}')">Cancelar</button>`:''}</div></div>`}).join('')||'<div class="box"><p>Nenhuma indicação neste filtro.</p></div>'}
 function regPagAbre(id){const i=IND.find(x=>x.id==id);if(!i)return;const b=get(i.indicadoUid)||{};
  sheet(`<h3>Pagamento de ${esc(b.nome||i.indicadoNome||'')}</h3><p>Valor recebido do indicado (R$). A comissão é calculada pela configuração atual e a carência começa agora.</p><input id="rvv" inputmode="decimal" value="${esc(CFG.pixValor||'')}" placeholder="Ex.: 30,00"><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt" onclick="regPag('${id}')">Registrar</button></div>`)}
 async function regPag(id){const venda=parseFloat(String($('#rvv').value).replace(',','.'));if(!(venda>0)){toast('Valor inválido');return}
@@ -238,6 +238,9 @@ async function marcaPaga(id){const i=IND.find(x=>x.id==id),pr=indProb(i);
  if(pr.length){toast('Não é possível pagar: '+pr[0]);return}
  if(!confirm('Confirma que você já repassou '+brl(i.comissao)+' ao indicador?'))return;
  try{await db.collection('indicacoes').doc(id).update({status:'paga',pagaEm:Date.now()});toast('Marcada como paga')}catch(e){toast(erro(e))}}
+async function liberaAgora(id){const i=IND.find(x=>x.id==id);if(!i)return;
+ if(!confirm('Liberar o repasse antes do fim da carência ('+dmy(i.liberaEm)+')? Faça isso só se tiver certeza de que o pagamento do indicado é definitivo.'))return;
+ try{await db.collection('indicacoes').doc(id).update({liberaEm:Date.now()});toast('Repasse liberado. Use "Marcar como paga" depois de pagar.')}catch(e){toast(erro(e))}}
 async function cancelaInd(id){if(!confirm('Cancelar esta indicação/comissão?'))return;try{await db.collection('indicacoes').doc(id).update({status:'cancelada',canceladaEm:Date.now()});toast('Cancelada')}catch(e){toast(erro(e))}}
 const APP_VER='1.3.0';
 function aba(n){[1,2,3,4].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.toggle('on',i==n)})}
