@@ -1,4 +1,4 @@
 {
-  "versao": "1.3.2",
-  "notas": "Cliente agora pode alterar a própria senha."
+  "versao": "1.3.5",
+  "notas": "Admin agora pode redefinir a senha do cliente pelo e-mail de recuperação."
 }

@@ -29,6 +29,9 @@ button{font:inherit;cursor:pointer}
 header .bt.gh{background:#ffffff33;color:#fff;border:0}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .row>*{flex:1}
+html{overscroll-behavior-y:contain}
+#ptr{position:fixed;left:50%;top:0;z-index:80;transform:translate(-50%,-70px);background:#fff;color:var(--ro);border-radius:0 0 22px 22px;padding:calc(10px + env(safe-area-inset-top,0px)) 20px 10px;font-size:14px;font-weight:600;box-shadow:0 6px 18px #0003;pointer-events:none;white-space:nowrap}
+#ptr i{display:inline-block;font-style:normal;transition:transform .2s}#ptr.go i{animation:ptrg .8s linear infinite}@keyframes ptrg{to{transform:rotate(360deg)}}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .tabs button{flex:1 1 auto;white-space:nowrap;font-size:14px;padding:10px 12px;border-radius:999px;border:0;background:#fff;color:var(--ro);font-weight:600;box-shadow:0 2px 8px #1f2a4410}
 .tabs .on{background:var(--pr);color:#fff}
@@ -63,7 +66,7 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
 <div class="row"><button class="bt" id="ab" onclick="entrar()">Entrar</button></div><p id="lm"></p></div></div>
 
 <div id="ad" hidden>
-<header><h1>Painel Comandas</h1><button class="bt gh sm" onclick="sair()">Sair</button></header>
+<header><h1>Painel Comandas</h1><div style="display:flex;gap:8px"><button class="bt gh sm" onclick="location.reload()" aria-label="Atualizar página">🔄</button><button class="bt gh sm" onclick="sair()">Sair</button></div></header>
 <main>
  <div class="tabs"><button id="t1" class="on" onclick="aba(1)">Licenças</button><button id="t2" onclick="aba(2)">Configurações</button><button id="t3" onclick="aba(3)">Avisos</button><button id="t4" onclick="aba(4)">Indicações</button></div>
  <div id="p4" class="pg" hidden>
@@ -72,6 +75,8 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
   <div id="il"></div>
  </div>
  <div id="p2" class="pg" hidden>
+  <div class="box"><h3>Redefinir senha de um cliente</h3><p>Manda um link de redefinição para o e-mail de recuperação que o cliente já cadastrou no app (menu Opções → E-mail de recuperação). Sem esse cadastro, não é possível redefinir a senha automaticamente.</p>
+   <input id="rsq" placeholder="Usuário, WhatsApp ou nome do cliente" onkeydown="if(event.key=='Enter')redefSenhaBusca()"><div class="row"><button class="bt" onclick="redefSenhaBusca()">Buscar cliente</button></div></div>
   <div class="box"><h3>Suporte (WhatsApp)</h3><p>Número com DDD (o 55 é adicionado sozinho). O botão "Falar com o suporte" do app usa este número.</p>
    <input id="cs" inputmode="tel" placeholder="Ex.: 85 99999-9999"></div>
   <div class="box"><h3>Aviso de nova versão</h3><p>Versão atual do app instalado: <b id="vapp">1.2.0</b>. Ao publicar uma versão maior, aparece o banner "Atualizar" nos aparelhos.</p>
@@ -96,7 +101,7 @@ select{font:inherit;color:var(--gr);background:#fff;border:2px solid var(--ln);b
  <div class="stats"><div><b id="n5">0</b>Em teste</div><div><b id="n4">0</b>Online agora</div><div><b id="n1">0</b>Ativos</div><div><b id="n2">0</b>Bloqueados</div><div><b id="n3">0</b>Suspeitos</div></div>
  <div class="box"><h3 style="margin:0">Novo cliente</h3>
   <input id="nn" placeholder="Nome do cliente / estabelecimento"><input id="nu" placeholder="Usuário ou e-mail (ex.: bardaana)" autocapitalize="none">
-  <input id="ns" placeholder="Senha (mín. 6 caracteres)">
+  <input id="ns" placeholder="Senha (mín. 6 caracteres)"><input id="nem" type="email" placeholder="E-mail do cliente (para recuperar a senha)">
   <select id="tp" onchange="tpMud()"><option value="v">Licença vitalícia (sem teste)</option><option value="t">Teste grátis</option></select>
   <div class="tr" id="tbx" hidden><input id="tn" inputmode="numeric" placeholder="Quantidade" value="1"><select id="tu"><option value="h">horas</option><option value="d" selected>dias</option></select></div>
   <p id="tdica" hidden style="font-size:13px">O teste começa no primeiro login do cliente. Máximo de 7 dias (168 horas).</p><div class="row"><button class="bt gh" onclick="gerar()">Gerar senha</button><button class="bt" onclick="criar()">Criar licença</button></div></div>
@@ -145,6 +150,23 @@ function escutar(){if(unsub)unsub();
  unsub=db.collection('licencas').orderBy('criadoEm','desc').onSnapshot(s=>{list=s.docs.map(d=>({id:d.id,...d.data()}));draw();drawInd()},e=>toast(erro(e)));escutaInd()}
 const MODO=()=>{try{return localStorage.getItem('vmodo')||'l'}catch(e){return'l'}};
 function modo(m){try{localStorage.setItem('vmodo',m)}catch(e){}draw()}
+
+function redefSenhaBusca(){const k=($('#rsq').value||'').trim().toLowerCase();
+ if(!k){toast('Digite o usuário, WhatsApp ou nome do cliente');return}
+ const m=list.filter(c=>(c.usuario||'').toLowerCase().includes(k)||(c.whatsapp||'').includes(k)||(c.nome||'').toLowerCase().includes(k));
+ if(!m.length){toast('Cliente não encontrado');return}
+ if(m.length>1){sheet(`<h3>Vários clientes encontrados</h3>${m.map(c=>`<div class="row"><span style="flex:2">${esc(c.nome)} (${esc(c.usuario||'')})</span><button class="bt sm" onclick="redefSenha('${c.id}')">Escolher</button></div>`).join('')}<div class="row"><button class="bt gh" onclick="cl()">Cancelar</button></div>`);return}
+ redefSenha(m[0].id)}
+function redefSenha(id){const c=get(id);if(!c)return;
+ if(!c.emailRecuperacao){sheet(`<h3>Redefinir senha</h3><p><b>${esc(c.nome)}</b> ainda não cadastrou um e-mail de recuperação no app (menu Opções → E-mail de recuperação).</p><p>Sem isso, não existe como redefinir a senha automaticamente — nem o Firebase Console permite. Peça para o cliente cadastrar o e-mail enquanto ainda lembra a senha atual. Se ele já esqueceu, a única saída hoje é excluir esta licença e o login dele em Authentication, e refazer o cadastro.</p><div class="row"><button class="bt gh" onclick="cl()">Fechar</button></div>`);return}
+ sheet(`<h3>Redefinir senha de ${esc(c.nome)}</h3><p>Vamos enviar um link de redefinição para o e-mail de recuperação já cadastrado: <b>${esc(c.emailRecuperacao)}</b>. O cliente abre o link no celular dele e cria uma senha nova.</p><div class="row"><button class="bt gh" onclick="cl()">Cancelar</button><button class="bt" onclick="redefSenha2('${id}')">Enviar link</button></div>`)}
+async function redefSenha2(id){const c=get(id);cl();
+ try{
+  const sec=firebase.apps.find(a=>a.name=='sec')||firebase.initializeApp(FB,'sec');
+  await sec.auth().sendSignInLinkToEmail(c.emailRecuperacao,{url:APP_URL,handleCodeInApp:true});
+  await sec.auth().signOut().catch(()=>{});
+  toast('Link enviado para '+c.emailRecuperacao)
+ }catch(e){toast(erro(e))}}
 function tpMud(){const t=$('#tp').value=='t';$('#tbx').hidden=!t;$('#tdica').hidden=!t}
 function tms(n,u){n=parseInt(n,10);if(!n||n<1)return 0;const ms=n*(u=='d'?864e5:36e5);return ms>7*864e5?0:ms}
 function tdesc(ms){const h=Math.round(ms/36e5);return h%24==0&&h>=24?(h/24)+(h==24?' dia':' dias'):h+(h==1?' hora':' horas')}
@@ -158,11 +180,11 @@ function draw(){
  const l=list.filter(c=>!k||(c.nome+' '+(c.usuario||'')).toLowerCase().includes(k));
  $('#ls').className=m=='g'?'grid':'';
  $('#ls').innerHTML=l.length?l.map(c=>`<div class="cl"><div class="top"><h3>${esc(c.nome)}</h3><span><span class="chip ${c.ativo?'on':'off'}">${c.ativo?'Ativo':'Bloqueado'}</span>${c.teste?(exp(c)?' <span class="chip ex">Teste expirado</span>':' <span class="chip ts">Teste</span>'):''}${c.suspeito?' <span class="chip sus">⚠ Suspeito</span>':''}</span></div>
- <small>Usuário: ${esc(c.usuario||c.email||'')}${c.autoTeste?' · teste automático':''}${c.whatsapp?` · <a href="https://wa.me/55${esc(c.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>`:''}</small>
+ <small>Usuário: ${esc(c.usuario||c.email||'')}${c.autoTeste?' · teste automático':''}${c.whatsapp?` · <a href="https://wa.me/55${esc(c.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>`:''}${c.emailRecuperacao?' · ✅ e-mail confirmado':(c.emailRecuperacaoPendente?' · ⏳ e-mail pendente':' · ⚠️ sem e-mail')}</small>
  ${c.teste?`<small>⏳ ${c.expiraEm?(exp(c)?'Teste terminou em '+fdt(c.expiraEm):'Restam '+rest(c.expiraEm)+' · termina '+fdt(c.expiraEm)):'Teste de '+tdesc(c.testeMs||0)+' · começa no 1º login'}</small>`:''}
  <small><span class="dot ${onl(c)?'on':''}"></span>${onl(c)?'Online agora':(c.visto?'Visto '+fdt(c.visto):'Último login: '+fdt(c.ultimoLogin))} · Trocas: ${c.trocas||0}</small>
  <small>Aparelho: ${c.sessao?esc((c.aparelhoInfo||'conectado')+' · '+(c.aparelho||'').slice(0,8)):'nenhum ativo'}</small>
- <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}${c.teste?`<button class="bt sm" style="background:#25a244" onclick="vital('${c.id}')">Ativar vitalícia</button><button class="bt gh sm" onclick="estende('${c.id}')">Novo teste</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Acesso</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
+ <div class="row"><button class="bt sm ${c.ativo?'rd':''}" onclick="alt('${c.id}')">${c.ativo?'Bloquear':'Ativar'}</button><button class="bt gh sm" onclick="deslog('${c.id}')">Deslogar</button>${c.suspeito?`<button class="bt gh sm" onclick="limpa('${c.id}')">Limpar alerta</button>`:''}${c.teste?`<button class="bt sm" style="background:#25a244" onclick="vital('${c.id}')">Ativar vitalícia</button><button class="bt gh sm" onclick="estende('${c.id}')">Novo teste</button>`:''}<button class="bt gh sm" onclick="copiar('${c.id}')">Acesso</button><button class="bt gh sm" onclick="redefSenha('${c.id}')">🔑 Senha</button><button class="bt gh sm" onclick="exc('${c.id}')">Excluir</button></div></div>`).join(''):'<div class="box">Nenhum cliente cadastrado.</div>'}
 setInterval(()=>{if(list.length&&!$('#ad').hidden)draw()},60000);
 const get=id=>list.find(c=>c.id==id);
 async function up(id,p,msg){try{await db.collection('licencas').doc(id).update(p);toast(msg);return true}catch(e){toast(erro(e));return false}}
@@ -182,15 +204,18 @@ function acesso(nome,u,senha,ms){
  window._t=t;sheet(`<h3>Dados de acesso</h3>${senha?'':'<p>A senha só aparece na criação. Se precisar, redefina pelo Firebase.</p>'}<pre>${esc(t)}</pre><input id="wn" inputmode="tel" placeholder="WhatsApp do cliente (DDD + número)"><div class="row"><button class="bt" style="background:#25a244" onclick="wapp()">Enviar por WhatsApp</button><button class="bt gh" onclick="navigator.clipboard.writeText(window._t).then(()=>toast('Copiado'))">Copiar</button><button class="bt gh" onclick="cl()">Fechar</button></div>`)}
 async function criar(){
  const nome=$('#nn').value.trim(),u=$('#nu').value.trim().toLowerCase(),s=$('#ns').value,teste=$('#tp').value=='t',ms=teste?tms($('#tn').value,$('#tu').value):0;
+ const emR=$('#nem').value.trim().toLowerCase();
  if(!nome||!u||s.length<6){toast('Preencha nome, usuário e senha (mín. 6)');return}
+ if(!/^\S+@\S+\.\S+$/.test(emR)){toast('Informe um e-mail válido do cliente (para recuperar a senha)');return}
  if(teste&&!ms){toast('Teste: use de 1 hora até 7 dias');return}
  const em=u.includes('@')?u:u+'@'+DOMINIO;
  try{
   const sec=firebase.apps.find(a=>a.name=='sec')||firebase.initializeApp(FB,'sec');
   const cr=await sec.auth().createUserWithEmailAndPassword(em,s);
-  await db.collection('licencas').doc(cr.user.uid).set({nome,usuario:u,email:em,ativo:true,criadoEm:Date.now(),sessao:null,aparelho:null,aparelhoInfo:'',ultimoLogin:null,trocas:0,trocasTs:[],suspeito:false,teste,testeMs:teste?ms:null,expiraEm:null});
+  await db.collection('licencas').doc(cr.user.uid).set({nome,usuario:u,email:em,ativo:true,criadoEm:Date.now(),sessao:null,aparelho:null,aparelhoInfo:'',ultimoLogin:null,trocas:0,trocasTs:[],suspeito:false,teste,testeMs:teste?ms:null,expiraEm:null,emailRecuperacaoPendente:emR});
+  try{await sec.auth().sendSignInLinkToEmail(emR,{url:APP_URL,handleCodeInApp:true})}catch(x){}
   await sec.auth().signOut();
-  $('#nn').value=$('#nu').value=$('#ns').value='';
+  $('#nn').value=$('#nu').value=$('#ns').value=$('#nem').value='';
   acesso(nome,u,s,teste?ms:0)
  }catch(e){toast(erro(e))}
 }
@@ -242,7 +267,20 @@ async function liberaAgora(id){const i=IND.find(x=>x.id==id);if(!i)return;
  if(!confirm('Liberar o repasse antes do fim da carência ('+dmy(i.liberaEm)+')? Faça isso só se tiver certeza de que o pagamento do indicado é definitivo.'))return;
  try{await db.collection('indicacoes').doc(id).update({liberaEm:Date.now()});toast('Repasse liberado. Use "Marcar como paga" depois de pagar.')}catch(e){toast(erro(e))}}
 async function cancelaInd(id){if(!confirm('Cancelar esta indicação/comissão?'))return;try{await db.collection('indicacoes').doc(id).update({status:'cancelada',canceladaEm:Date.now()});toast('Cancelada')}catch(e){toast(erro(e))}}
-const APP_VER='1.3.0';
+
+(function(){const el=document.createElement('div');el.id='ptr';el.innerHTML='<i>↓</i> <span>Puxe para atualizar</span>';document.body.appendChild(el);
+ let y0=null,d=0,on=false;const LIM=54,tx=el.querySelector('span'),ic=el.querySelector('i');
+ const livre=t=>{for(let n=t;n&&n!==document.body;n=n.parentElement){if(n.scrollTop>0)return false;if(/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName))return false}
+  const m=document.getElementById('m');if(m&&m.firstElementChild)return false;return window.scrollY<=0};
+ const pos=v=>{el.style.transform='translate(-50%,'+(v-70)+'px)'};
+ document.addEventListener('touchstart',e=>{y0=(e.touches.length==1&&livre(e.target))?e.touches[0].clientY:null;d=0;on=false},{passive:true});
+ document.addEventListener('touchmove',e=>{if(y0===null||el.classList.contains('go'))return;d=e.touches[0].clientY-y0;
+  if(d<=0){pos(0);return}on=true;pos(Math.min(d*.5,80));tx.textContent=d*.5>=LIM?'Solte para atualizar':'Puxe para atualizar'},{passive:true});
+ document.addEventListener('touchend',()=>{if(y0===null)return;y0=null;
+  if(on&&d*.5>=LIM){el.classList.add('go');ic.textContent='⟳';tx.textContent='Atualizando…';pos(60);setTimeout(()=>location.reload(),250)}else pos(0);on=false;d=0});
+ document.addEventListener('touchcancel',()=>{y0=null;pos(0)});
+})();
+const APP_VER='1.3.6';
 function aba(n){[1,2,3,4].forEach(i=>{$('#p'+i).hidden=i!=n;$('#t'+i).classList.toggle('on',i==n)})}
 function escutaCfg(){if(unc)unc();
  unc=db.collection('config').doc('app').onSnapshot(s=>{CFG=s.exists?s.data():{};
