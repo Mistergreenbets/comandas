@@ -1,4 +1,4 @@
 {
-  "versao": "1.3.5",
-  "notas": "Admin agora pode redefinir a senha do cliente pelo e-mail de recuperação."
+  "versao": "1.3.8",
+  "notas": "Removido o recurso de e-mail de recuperação / esqueci minha senha."
 }
